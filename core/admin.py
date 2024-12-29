@@ -32,15 +32,5 @@ class ClientAdmin(admin.ModelAdmin):
     actions = [activate_clients, deactivate_clients]
 
 
-@admin.register(UnimedCredentials)
-class UnimedCredentialsAdmin(admin.ModelAdmin):
-    list_display = ("user", "username")
-    search_fields = ("user__username", "username")
-
-
-@admin.register(PayloadLog)
-class PayloadLogAdmin(admin.ModelAdmin):
-    list_display = ("id", "created_at", "updated_at")
-    readonly_fields = ("payload_data", "created_at", "updated_at")
-    search_fields = ("payload_data",)
-    list_filter = ("created_at",)
+admin.site.register(UnimedCredentials)
+admin.site.register(PayloadLog)

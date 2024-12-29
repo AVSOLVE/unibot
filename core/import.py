@@ -216,17 +216,18 @@ client_data = [line.split(";") for line in data.strip().split("\n")]
 
 
 def import_clients():
-    for id_card, name in client_data:
+    for codigo_beneficiario, nome_beneficiario in client_data:
         Client.objects.get_or_create(
-            id_card=id_card,
-            name=name,
-            type="3",
-            qtd="1",
+            codigo_beneficiario=codigo_beneficiario,
+            nome_beneficiario=nome_beneficiario,
+            tipo_atendimento="3",
+            quantidade="1",
             active=True,
             user=User.objects.first(),  # Or any other user logic
         )
 
     print("Data import completed.")
+
 
 # Call the import function
 import_clients()

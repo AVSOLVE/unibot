@@ -32,9 +32,6 @@ class CredentialsSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def from_credentials_model(credentials):
-        """
-        Serialize a single credentials model and return the serialized data.
-        """
         return CredentialsSerializer(credentials).data
 
 
@@ -44,17 +41,12 @@ class PayloadSerializer(serializers.Serializer):
 
     @staticmethod
     def from_models(client_list, credentials):
-        # Serialize each client using the custom from_client_model method
         serialized_clients = [
             ClientSerializer.from_client_model(client) for client in client_list
         ]
-
-        # Serialize credentials or provide None if credentials are missing
         serialized_credentials = (
             CredentialsSerializer.from_credentials_model(credentials)
             if credentials
             else {"login": None, "password": None}
         )
-
-        # Return the serialized data in the expected format
         return {"clients": serialized_clients, "credentials": serialized_credentials}

@@ -32,18 +32,12 @@ def user_logout(request):
 
 @login_required
 def run_script(request):
-    """
-    Function to process and send a script execution request based on active clients and credentials.
-    """
-    # Fetch clients and credentials
+
     client_list = Client.objects.filter(user=request.user, active=True).order_by("-created_at")
     credentials = UnimedCredentials.objects.filter(user=request.user).first()
 
-    # Prepare the payload using the serializer's static method
     payload_data = PayloadSerializer.from_models(client_list, credentials)
-    print("Prepared Payload Data:", payload_data)
 
-    # Validate the payload using the serializer
     serializer = PayloadSerializer(data=payload_data)
     try:
         serializer.is_valid(raise_exception=True)
@@ -60,13 +54,10 @@ def run_script(request):
             {"status": "error", "message": "Failed to save payload log."}, status=500
         )
 
-    # Call the external script
     try:
-        # Serialize the validated payload into JSON
         payload_json = JSONRenderer().render(serializer.validated_data).decode("utf-8")
         print("Serialized Payload JSON:", payload_json)
 
-        # Trigger the asynchronous task
         result = executar_guias.delay(payload_json)
         print("Task Result:", result.result)
     except Exception as e:

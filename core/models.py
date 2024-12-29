@@ -44,7 +44,7 @@ class TypeChoices(models.TextChoices):
 
 class UnimedCredentials(TimeStamped):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    username = models.CharField(max_length=255, verbose_name="Unimed Login")
+    login = models.CharField(max_length=255, verbose_name="Unimed Login")
     password = models.CharField(max_length=255, verbose_name="Unimed Password")
 
     def __str__(self):
@@ -72,7 +72,7 @@ class Client(TimeStamped):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("Usuário"))
 
     def __str__(self):
-        return f"{self.name} ({self.id_card}) - {self.get_type_display()}"
+        return f"{self.nome_beneficiario} ({self.codigo_beneficiario}) - {self.get_tipo_atendimento_display()}"
 
 
 class PayloadLog(TimeStamped):
