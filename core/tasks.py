@@ -7,7 +7,7 @@ logger = get_task_logger(__name__)
 
 
 @shared_task(bind=True)
-def run_playwright_executar_guias(self, payload_json):
+def executar_guias(self, payload_json):
     logger.info(f"Task {self.request.id} received payload: {payload_json}")
     try:
         payload = json.loads(payload_json)

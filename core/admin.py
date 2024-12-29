@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db.models import QuerySet
-from .models import PayloadLog, UnimedCredentials, ClientModel
+from .models import *
 
 
 @admin.action(description="Desativar clientes selecionados")
@@ -26,8 +26,8 @@ def activate_clients(modeladmin, request, queryset: QuerySet):
         modeladmin.message_user(request, "Nenhum cliente foi ativado.", level="warning")
 
 
-@admin.register(ClientModel)
-class ClientModelAdmin(admin.ModelAdmin):
+@admin.register(Client)
+class ClientAdmin(admin.ModelAdmin):
     list_display = ("name", "id_card", "active", "user")
     list_filter = ("active",)
     search_fields = ("id_card", "name")

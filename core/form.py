@@ -1,11 +1,11 @@
 from django import forms
 from django.forms import ModelForm
-from core.models import ClientModel
+from core.models import Client
 
 
 class ClientForm(ModelForm):
     class Meta:
-        model = ClientModel
+        model = Client
         fields = "__all__"  # You can customize the fields here if needed
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),

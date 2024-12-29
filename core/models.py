@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator, MinValueValidator
 
 
-class TimeStampedModel(models.Model):
+class TimeStamped(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -42,7 +42,7 @@ class TypeChoices(models.TextChoices):
     TELESSAUDE = "22", _("Telessaúde")
     TERAPIA_RENAL_SUBSTITUTIVA = "10", _("Terapia Renal Substitutiva (TRS)")
 
-class UnimedCredentials(TimeStampedModel):
+class UnimedCredentials(TimeStamped):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     username = models.CharField(max_length=255, verbose_name="Unimed Login")
     password = models.CharField(max_length=255, verbose_name="Unimed Password")
@@ -51,7 +51,7 @@ class UnimedCredentials(TimeStampedModel):
         return f"Unimed Credentials for {self.user.username}"
 
 
-class ClientModel(TimeStampedModel):
+class Client(TimeStamped):
     name = models.CharField(max_length=255, verbose_name=_("Nome do Beneficiário"))
     id_card = models.CharField(
         max_length=17,
@@ -75,7 +75,7 @@ class ClientModel(TimeStampedModel):
         return f"{self.name} ({self.id_card}) - {self.get_type_display()}"
 
 
-class PayloadLog(TimeStampedModel):
+class PayloadLog(TimeStamped):
     payload_data = models.JSONField(verbose_name=_("Dados do Payload"))
 
     def __str__(self):

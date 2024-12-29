@@ -1,15 +1,14 @@
 import json
-from django.conf import settings
 from django.utils.timezone import now
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from core.tasks import run_playwright_executar_guias
+from core.tasks import executar_guias
 from core.form import ClientForm
-from .models import ClientModel, PayloadLog, UnimedCredentials
-import asyncio
+from .models import Client, PayloadLog, UnimedCredentials
+
 
 
 def user_login(request):
@@ -33,7 +32,7 @@ def user_logout(request):
 
 @login_required
 def run_script(request):
-    client_list = ClientModel.objects.filter(user=request.user, active=True).order_by(
+    client_list = Client.objects.filter(user=request.user, active=True).order_by(
         "-created_at"
     )
     credentials = UnimedCredentials.objects.filter(user=request.user).first()
@@ -88,7 +87,7 @@ def run_script(request):
     # Call the external script
     try:
         payload_json = json.dumps(payload)
-        result = run_playwright_executar_guias.delay(payload_json)
+        result = executar_guias.delay(payload_json)
         print(result.result)
         # run_playwright_executar_guias.apply_async(
         #     args=[payload_json],
@@ -105,7 +104,7 @@ def run_script(request):
 
 @login_required
 def client_list_view(request):
-    client_list = ClientModel.objects.filter(user=request.user).order_by("name")
+    client_list = Client.objects.filter(user=request.user).order_by("name")
     active_clients = client_list.filter(active=True).count
     return render(
         request,
@@ -131,7 +130,7 @@ def client_create_view(request):
 
 
 def client_edit(request, client_id):
-    client = get_object_or_404(ClientModel, id=client_id)
+    client = get_object_or_404(Client, id=client_id)
 
     if request.method == "POST":
         form = ClientForm(request.POST, instance=client)

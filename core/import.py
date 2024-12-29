@@ -17,7 +17,7 @@ except Exception as e:
 
 # Now you can safely import your models
 from django.contrib.auth.models import User
-from core.models import ClientModel
+from core.models import Client
 
 # The data to be imported (you can also load this data from a file if needed)
 data = """
@@ -217,7 +217,7 @@ client_data = [line.split(";") for line in data.strip().split("\n")]
 
 def import_clients():
     for id_card, name in client_data:
-        ClientModel.objects.get_or_create(
+        Client.objects.get_or_create(
             id_card=id_card,
             name=name,
             type="3",

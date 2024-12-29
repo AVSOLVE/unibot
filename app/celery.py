@@ -15,7 +15,6 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 # Autodiscover tasks
 app.autodiscover_tasks()
 
-# app.conf.worker_pool = 'eventlet'
 app.conf.beat_schedule = {
     'my_periodic_task': {
         'task': 'core.tasks.my_periodic_task',
