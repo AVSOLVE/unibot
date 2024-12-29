@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Edit Client</title>
+  </head>
+  <body>
+    <h1>Edit Client</h1>
+    <a href="{% url 'client_list' %}">Back to Client List</a>
+
+    <form method="POST">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Save</button>
+    </form>
+  </body>
+</html>

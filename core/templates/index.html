@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Client List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex flex-col">
+    <header class="bg-blue-600 text-white py-4">
+      <div class="container mx-auto flex justify-between items-center">
+        <h1 class="text-2xl font-bold">UNIbot</h1>
+        <nav>
+          <a
+            href="{% url 'logout' %}"
+            class="text-sm px-4 py-2 rounded bg-red-500 hover:bg-red-600 transition"
+            >Logout</a
+          >
+          <a
+            href="{% url 'client_create' %}"
+            class="text-sm px-4 py-2 rounded bg-green-500 hover:bg-green-600 transition"
+            >Novo Cliente</a
+          >
+          <a
+            href="{% url 'run_script' %}"
+            class="text-sm px-4 py-2 rounded bg-blue-500 hover:bg-blue-700 transition"
+            >Executar</a
+          >
+        </nav>
+      </div>
+    </header>
+    <main class="container mx-auto mt-8 max-w-4xl">
+      <!-- Summary Section -->
+      <div class="bg-white shadow-md rounded p-4 mb-6 flex justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800">
+            Resumo dos Clientes
+          </h2>
+          <p class="text-gray-700 mt-2">
+            Total de Clientes:
+            <span id="totalClients" class="font-bold"
+              >{{client_list.count}}</span
+            >
+            | Clientes Ativos:
+            <span id="activeClients" class="font-bold">{{active_clients}}</span>
+          </p>
+        </div>
+        <button
+          id="filterActiveButton"
+          class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+        >
+          Mostrar Ativos
+        </button>
+      </div>
+
+      <!-- Search Field -->
+      <div class="mb-4">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search for a client..."
+          class="w-full p-3 border border-gray-300 rounded shadow focus:outline-none focus:ring focus:ring-blue-200"
+        />
+      </div>
+
+      <div class="overflow-x-auto rounded-lg shadow-lg">
+        <table class="min-w-full bg-white">
+          <thead class="bg-blue-600 text-white">
+            <tr>
+              <th class="text-left px-4 py-3">Nome</th>
+              <th class="text-left px-4 py-3">Carteirinha</th>
+              <th class="text-left px-4 py-3">Tipo</th>
+              <th class="text-left px-4 py-3">Qtd</th>
+              <th class="text-left px-4 py-3">Ativo</th>
+              <th class="text-left px-4 py-3">Prestador</th>
+              <th class="text-left px-4 py-3">Editar</th>
+            </tr>
+          </thead>
+          <tbody id="clientTable">
+            {% for client in client_list %}
+            <tr class="border-t border-gray-200 hover:bg-gray-100">
+              <td class="px-4 py-2">{{ client.name|upper }}</td>
+              <td class="px-4 py-2">{{ client.id_card }}</td>
+              <td class="px-4 py-2">{{ client.get_type_display }}</td>
+              <td class="px-4 py-2">{{ client.qtd }}</td>
+              <td class="px-4 py-2">
+                <span
+                  class="px-3 py-1 rounded-full text-sm font-medium {{ client.active|yesno:'bg-green-200 text-green-800,bg-red-200 text-red-800' }}"
+                  >{{ client.active|yesno:'Ativo,Inativo' }}</span
+                >
+              </td>
+              <td class="px-4 py-2">{{ client.user }}</td>
+              <td class="px-4 py-2">
+                <a
+                  href="{% url 'client_edit' client.id %}"
+                  class="text-blue-500 hover:underline"
+                  >Editar</a
+                >
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-auto">
+      <p>&copy; {{ year }} Client Management System. All rights reserved.</p>
+    </footer>
+    <script>
+
+      // Filter functionality for search
+      const searchInput = document.getElementById('searchInput');
+      const clientTable = document.getElementById('clientTable');
+      const rows = clientTable.getElementsByTagName('tr');
+      const filterActiveButton = document.getElementById('filterActiveButton');
+
+      let showingActiveOnly = false; // Toggle state
+
+      // Real-time search filtering
+      searchInput.addEventListener('input', function () {
+        const filter = searchInput.value.toLowerCase();
+
+        for (let i = 0; i < rows.length; i++) {
+          const cells = rows[i].getElementsByTagName('td');
+          let found = false;
+
+          for (let j = 0; j < cells.length; j++) {
+            if (cells[j].innerText.toLowerCase().includes(filter)) {
+              found = true;
+              break;
+            }
+          }
+
+          rows[i].style.display = found ? '' : 'none';
+        }
+      });
+
+      // Toggle active clients
+      filterActiveButton.addEventListener('click', function () {
+        showingActiveOnly = !showingActiveOnly; // Toggle state
+
+        if (showingActiveOnly) {
+          // Show only active clients
+          for (let i = 0; i < rows.length; i++) {
+            const activeCell = rows[i].getElementsByTagName('td')[4]; // Assuming "Ativo" is the 5th column
+            const isActive =
+              activeCell &&
+              activeCell.innerText.trim().toLowerCase() === 'ativo';
+
+            rows[i].style.display = isActive ? '' : 'none';
+          }
+          filterActiveButton.textContent = 'Mostrar Todos';
+          filterActiveButton.classList.remove(
+            'bg-green-500',
+            'hover:bg-green-600'
+          );
+          filterActiveButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
+        } else {
+          // Show all clients
+          for (let i = 0; i < rows.length; i++) {
+            rows[i].style.display = '';
+          }
+          filterActiveButton.textContent = 'Mostrar Ativos';
+          filterActiveButton.classList.remove(
+            'bg-blue-500',
+            'hover:bg-blue-600'
+          );
+          filterActiveButton.classList.add(
+            'bg-green-500',
+            'hover:bg-green-600'
+          );
+        }
+      });
+    </script>
+  </body>
+</html>
