@@ -52,8 +52,8 @@ class UnimedCredentials(TimeStamped):
 
 
 class Client(TimeStamped):
-    name = models.CharField(max_length=255, verbose_name=_("Nome do Beneficiário"))
-    id_card = models.CharField(
+    nome_beneficiario = models.CharField(max_length=255, verbose_name=_("Nome do Beneficiário"))
+    codigo_beneficiario = models.CharField(
         max_length=17,
         verbose_name=_("Carteirinha"),
         unique=True,
@@ -61,10 +61,10 @@ class Client(TimeStamped):
             RegexValidator(r"^\d{17}$", _("A carteirinha deve conter exatos 17 dígitos."))
         ],
     )
-    type = models.CharField(
+    tipo_atendimento = models.CharField(
         max_length=2, choices=TypeChoices.choices, verbose_name=_("Tipo de Atendimento")
     )
-    qtd = models.PositiveIntegerField(
+    quantidade = models.PositiveIntegerField(
         verbose_name=_("Quantidade a Executar"),
         validators=[MinValueValidator(1)],
     )

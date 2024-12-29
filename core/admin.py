@@ -11,8 +11,9 @@ def deactivate_clients(modeladmin, request, queryset: QuerySet):
             request, f"{updated_count} cliente(s) foram desativados com sucesso."
         )
     else:
-        modeladmin.message_user(request, "Nenhum cliente foi desativado.", level="warning")
-
+        modeladmin.message_user(
+            request, "Nenhum cliente foi desativado.", level="warning"
+        )
 
 
 @admin.action(description="Ativar clientes selecionados")
@@ -28,11 +29,7 @@ def activate_clients(modeladmin, request, queryset: QuerySet):
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ("name", "id_card", "active", "user")
-    list_filter = ("active",)
-    search_fields = ("id_card", "name")
-    actions = [deactivate_clients, activate_clients]
-
+    actions = [activate_clients, deactivate_clients]
 
 
 @admin.register(UnimedCredentials)

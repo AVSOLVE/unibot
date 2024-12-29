@@ -79,10 +79,10 @@
           <tbody id="clientTable">
             {% for client in client_list %}
             <tr class="border-t border-gray-200 hover:bg-gray-100">
-              <td class="px-4 py-2">{{ client.name|upper }}</td>
-              <td class="px-4 py-2">{{ client.id_card }}</td>
-              <td class="px-4 py-2">{{ client.get_type_display }}</td>
-              <td class="px-4 py-2">{{ client.qtd }}</td>
+              <td class="px-4 py-2">{{ client.nome_beneficiario|upper }}</td>
+              <td class="px-4 py-2">{{ client.codigo_beneficiario }}</td>
+              <td class="px-4 py-2">{{ client.get_tipo_atendimento_display }}</td>
+              <td class="px-4 py-2">{{ client.quantidade }}</td>
               <td class="px-4 py-2">
                 <span
                   class="px-3 py-1 rounded-full text-sm font-medium {{ client.active|yesno:'bg-green-200 text-green-800,bg-red-200 text-red-800' }}"

@@ -3,10 +3,10 @@ from rest_framework import serializers
 
 
 class ClientSerializer(serializers.ModelSerializer):
-    nome_beneficiario = serializers.CharField(source="name")
-    codigo_beneficiario = serializers.CharField(source="id_card")
-    tipo_atendimento = serializers.CharField(source="type")
-    quantidade = serializers.IntegerField(source="qtd")
+    nome_beneficiario = serializers.CharField()
+    codigo_beneficiario = serializers.CharField()
+    tipo_atendimento = serializers.CharField()
+    quantidade = serializers.IntegerField()
 
     class Meta:
         model = Client
@@ -32,6 +32,9 @@ class CredentialsSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def from_credentials_model(credentials):
+        """
+        Serialize a single credentials model and return the serialized data.
+        """
         return CredentialsSerializer(credentials).data
 
 
@@ -41,13 +44,17 @@ class PayloadSerializer(serializers.Serializer):
 
     @staticmethod
     def from_models(client_list, credentials):
-        serialized_clients = ClientSerializer(client_list, many=True).data
+        # Serialize each client using the custom from_client_model method
+        serialized_clients = [
+            ClientSerializer.from_client_model(client) for client in client_list
+        ]
+
+        # Serialize credentials or provide None if credentials are missing
         serialized_credentials = (
-            CredentialsSerializer(credentials).data
+            CredentialsSerializer.from_credentials_model(credentials)
             if credentials
-            else {
-                "login": None,
-                "password": None,
-            }
+            else {"login": None, "password": None}
         )
+
+        # Return the serialized data in the expected format
         return {"clients": serialized_clients, "credentials": serialized_credentials}

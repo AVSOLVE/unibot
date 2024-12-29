@@ -1,14 +1,14 @@
-import json
-from django.utils.timezone import now
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from core.tasks import executar_guias
-from core.form import ClientForm
+from .serializers import PayloadSerializer
+from .tasks import executar_guias
+from .form import ClientForm
 from .models import Client, PayloadLog, UnimedCredentials
-
+from rest_framework.exceptions import ValidationError
+from rest_framework.renderers import JSONRenderer
 
 
 def user_login(request):
@@ -32,68 +32,45 @@ def user_logout(request):
 
 @login_required
 def run_script(request):
-    client_list = Client.objects.filter(user=request.user, active=True).order_by(
-        "-created_at"
-    )
+    """
+    Function to process and send a script execution request based on active clients and credentials.
+    """
+    # Fetch clients and credentials
+    client_list = Client.objects.filter(user=request.user, active=True).order_by("-created_at")
     credentials = UnimedCredentials.objects.filter(user=request.user).first()
 
-    # Serialize client data
-    serialized_clients = [
-        {
-            "nome_beneficiario": client.name,
-            "codigo_beneficiario": client.id_card,
-            "tipo_atendimento": client.type,
-            "quantidade": client.qtd,
-        }
-        for client in client_list
-    ]
+    # Prepare the payload using the serializer's static method
+    payload_data = PayloadSerializer.from_models(client_list, credentials)
+    print("Prepared Payload Data:", payload_data)
 
-    # Serialize credentials
-    serialized_credentials = {
-        "login": credentials.username if credentials else None,
-        "password": credentials.password if credentials else None,
-    }
-
-    # Create the payload to send
-    payload = {
-        "clients": serialized_clients,
-        "credentials": serialized_credentials,
-    }
-
-    # Check if the payload has already been used today
-    today = now().date()
-    # if PayloadLog.objects.filter(created_at__date=today, payload_data=payload).exists():
-    #     return JsonResponse(
-    #         {"status": "error", "message": "Payload already used today."}, status=400
-    #     )
-
-    # Validate required keys
-    required_keys = {
-        "nome_beneficiario",
-        "codigo_beneficiario",
-        "tipo_atendimento",
-        "quantidade",
-    }
-    for idx, client in enumerate(serialized_clients, start=1):
-        if not required_keys.issubset(client.keys()):
-            return JsonResponse(
-                {"status": "error", "message": f"Payload mismatch for client #{idx}."},
-                status=400,
-            )
+    # Validate the payload using the serializer
+    serializer = PayloadSerializer(data=payload_data)
+    try:
+        serializer.is_valid(raise_exception=True)
+    except ValidationError as e:
+        print("Payload Validation Error:", e.detail)
+        return JsonResponse({"status": "error", "message": e.detail}, status=400)
 
     # Save the payload log
-    PayloadLog.objects.create(payload_data=payload)
+    try:
+        PayloadLog.objects.create(payload_data=serializer.validated_data)
+    except Exception as e:
+        print("Error Saving Payload Log:", str(e))
+        return JsonResponse(
+            {"status": "error", "message": "Failed to save payload log."}, status=500
+        )
 
     # Call the external script
     try:
-        payload_json = json.dumps(payload)
+        # Serialize the validated payload into JSON
+        payload_json = JSONRenderer().render(serializer.validated_data).decode("utf-8")
+        print("Serialized Payload JSON:", payload_json)
+
+        # Trigger the asynchronous task
         result = executar_guias.delay(payload_json)
-        print(result.result)
-        # run_playwright_executar_guias.apply_async(
-        #     args=[payload_json],
-        #     queue=settings.ENVIRONMENT,
-        # )
+        print("Task Result:", result.result)
     except Exception as e:
+        print("Script Execution Error:", str(e))
         return JsonResponse(
             {"status": "error", "message": f"Script execution failed: {str(e)}"},
             status=500,
@@ -102,9 +79,10 @@ def run_script(request):
     return redirect("client_list")
 
 
+
 @login_required
 def client_list_view(request):
-    client_list = Client.objects.filter(user=request.user).order_by("name")
+    client_list = Client.objects.filter(user=request.user).order_by("nome_beneficiario")
     active_clients = client_list.filter(active=True).count
     return render(
         request,
