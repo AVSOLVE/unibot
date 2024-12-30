@@ -33,20 +33,19 @@ ENV PYTHONUNBUFFERED 1
 # Create and set the working directory
 RUN mkdir /code
 WORKDIR /code
+COPY . /code
 
-
-COPY requirements.txt /code/
-
-# Install Python dependencies
-RUN pip install --upgrade pip
+# Install Poetry
 RUN pip install poetry
+
+# Configure Poetry to create virtualenvs inside the project folder
 RUN poetry config virtualenvs.in-project true
-RUN poetry install --no-dev --no-root
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install dependencies using Poetry
+RUN poetry install --only main --no-root
 
 # Install Playwright browsers
 RUN poetry run playwright install chromium --with-deps
-COPY . /code
 
 # Ensure the poetry virtual environment is used
 ENV PATH="/code/.venv/bin:$PATH"
