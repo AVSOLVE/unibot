@@ -1,8 +1,8 @@
-# Use a Python base image
 FROM python:3.12-slim
 
-# Install system dependencies
+# Install system dependencies including xvfb and playwright
 RUN apt-get update && apt-get install -y \
+  xvfb \
   git \
   build-essential \
   redis-server \
@@ -31,18 +31,28 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # Create and set the working directory
-RUN mkdir /code
-WORKDIR /code
-COPY . /code
+RUN mkdir /app
+WORKDIR /app
+COPY . /app
 
-# Install Poetry
-RUN pip install poetry && poetry config virtualenvs.in-project true && poetry install --only main --no-root && poetry run playwright install chromium --with-deps
+# Install Poetry and project dependencies
+RUN pip install poetry django celery djangorestframework playwright redis && \
+  poetry config virtualenvs.in-project true && \
+  poetry install --only main --no-root && \
+  poetry run playwright install chromium --with-deps
+
+# Copy the application code
+COPY . .
+
+# Expose the necessary ports
+EXPOSE 8000 6379
+
+# Copy the entrypoint script and set permissions
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Ensure the poetry virtual environment is used
 ENV PATH="/code/.venv/bin:$PATH"
+# Set the entrypoint for the container
+CMD ["/entrypoint.sh"]
 
-# Expose ports
-EXPOSE 6379 8000
-
-# Default command for the web container
-CMD ["poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]

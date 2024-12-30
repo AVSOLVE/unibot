@@ -1,42 +1,20 @@
 services:
-  # Django app
-  web:
+  app:
     build: .
-    command: poetry run python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/code
-    working_dir: /code
+      - .:/app
     ports:
-      - "8000:8000"
-    depends_on:
-      redis:
-        condition: service_healthy
+      - "8000:8000" # Django server
+      - "6379" # Redis port for debugging or other usage
     environment:
       - DJANGO_SETTINGS_MODULE=app.settings
-      - CELERY_BROKER_URL=redis://redis:6379/0
-
-  # Celery worker
-  celery:
-    build: .
-    command: xvfb-run celery -A app worker --loglevel=info
-    volumes:
-      - .:/code
-    working_dir: /code
+      - CELERY_BROKER_URL=redis://redis:6379/0 # Use 'redis' service name
     depends_on:
-        redis:
-          condition: service_healthy
-    environment:
-      - DJANGO_SETTINGS_MODULE=app.settings
-      - CELERY_BROKER_URL=redis://redis:6379/0
+      - redis # Ensure Redis starts before the Django app
+    command: [ "/entrypoint.sh" ] # Point to entrypoint script
 
-  # Redis
   redis:
-    image: redis:latest
+    image: redis:6.2 # Redis image
+    container_name: redis
     ports:
-      - "6379:6379"
-    restart: always
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      - "6379" # Expose Redis port for communication
