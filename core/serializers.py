@@ -23,7 +23,7 @@ class ClientSerializer(serializers.ModelSerializer):
 
 
 class CredentialsSerializer(serializers.ModelSerializer):
-    login = serializers.CharField(source="username")
+    login = serializers.CharField()
     password = serializers.CharField()
 
     class Meta:

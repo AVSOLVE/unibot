@@ -33,7 +33,9 @@ def user_logout(request):
 @login_required
 def run_script(request):
 
-    client_list = Client.objects.filter(user=request.user, active=True).order_by("-created_at")
+    client_list = Client.objects.filter(user=request.user, active=True).order_by(
+        "-created_at"
+    )
     credentials = UnimedCredentials.objects.filter(user=request.user).first()
 
     payload_data = PayloadSerializer.from_models(client_list, credentials)
@@ -56,8 +58,6 @@ def run_script(request):
 
     try:
         payload_json = JSONRenderer().render(serializer.validated_data).decode("utf-8")
-        print("Serialized Payload JSON:", payload_json)
-
         result = executar_guias.delay(payload_json)
         print("Task Result:", result.result)
     except Exception as e:
@@ -68,7 +68,6 @@ def run_script(request):
         )
 
     return redirect("client_list")
-
 
 
 @login_required

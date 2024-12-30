@@ -30,6 +30,7 @@ django-recaptcha = "^4.0.0"
 newrelic = "^10.2.0"
 qrcode = "^8.0"
 cachetools = "^5.5.0"
+playwright = "^1.49.1"
 
 [build-system]
 requires = ["poetry-core"]
