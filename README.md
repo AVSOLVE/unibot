@@ -12,3 +12,6 @@
 - sobre nos + contato
 - header
 - footer
+- responsividade
+- cron semanal
+- relatorio de guias
