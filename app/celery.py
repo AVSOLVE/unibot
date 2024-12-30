@@ -15,8 +15,6 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 
 # Ensure the use of the threading pool on Windows
 app.conf.update(
-    CELERY_POOL="threads",
-    CELERY_CONCURRENCY=10,
     CELERY_ACCEPT_CONTENT=["json"],
     CELERY_TASK_SERIALIZER="json",
     CELERY_BROKER_URL="redis://redis:6379/0",
