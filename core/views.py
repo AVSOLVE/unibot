@@ -51,7 +51,7 @@ def run_script(request):
         )
 
     # Divide clients into chunks of 10
-    chunk_size = 10
+    chunk_size = 5
     client_chunks = list(chunk_list(client_list, chunk_size))
 
     # Prepare tasks for each chunk
