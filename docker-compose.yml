@@ -18,7 +18,7 @@ services:
   # Celery worker
   celery:
     build: .
-    command: poetry run celery -A app worker --loglevel=info
+    command: xvfb-run celery -A app worker --loglevel=info
     volumes:
       - .:/code
     working_dir: /code
