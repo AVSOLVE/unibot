@@ -15,3 +15,4 @@
 - responsividade
 - cron semanal
 - relatorio de guias
+- reduce img size

@@ -10,8 +10,8 @@ logger = get_task_logger(__name__)
 def executar_guias(self, payload_json):
     try:
         payload = json.loads(payload_json)
-        clients = payload["clients"]
         credentials = payload["credentials"]
+        clients = payload["clients"]
 
         if not credentials["login"] or not credentials["password"]:
             raise ValueError("Invalid credentials provided.")

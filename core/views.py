@@ -3,7 +3,9 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .serializers import PayloadSerializer
+
+from core.main import get_beneficiario_data
+from .serializers import CredentialsSerializer, PayloadSerializer
 from .tasks import executar_guias
 from .form import ClientForm
 from celery import group
@@ -92,6 +94,23 @@ def run_script(request):
             status=500,
         )
 
+    return JsonResponse(
+        {"status": "success", "message": "Tasks dispatched successfully."}
+    )
+
+
+def run_script2(request):
+    credentials = UnimedCredentials.objects.filter(user=request.user).first()
+    if not credentials:
+        return JsonResponse(
+            {"status": "error", "message": "No credentials found."}, status=400
+        )
+
+    # Serialize and validate credentials
+    serializer = CredentialsSerializer.from_credentials_model(credentials)
+    payload_json = JSONRenderer().render(serializer).decode("utf-8")
+    print("Payload JSON:", payload_json)
+    get_beneficiario_data(payload_json, "02220607001617033")
     return JsonResponse(
         {"status": "success", "message": "Tasks dispatched successfully."}
     )

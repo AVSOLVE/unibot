@@ -255,7 +255,7 @@ def process_and_execute(clients, page):
 
 def login_and_navigate(credentials, clients):
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
+        browser = playwright.chromium.launch(headless=False)
         context = browser.new_context()
         page = context.new_page()
 
@@ -275,3 +275,61 @@ def login_and_navigate(credentials, clients):
         process_and_execute(clients, page)
         # input("Press Enter to close the browser...")
         browser.close()
+
+
+def login(page, credentials, menu_option):
+    page.goto(urls["loginPage"], wait_until="domcontentloaded")
+
+    frame = page.frame_locator("iframe >> nth=0").frame_locator("#principal")
+    frame.locator("#tipoUsuario").select_option("P")
+    frame.locator("#nmUsuario").fill(credentials["login"])
+    frame.locator("#dsSenha").fill(credentials["password"])
+    frame.get_by_role("button", name="Entrar").click()
+    print("Login successful!")
+    frame = (
+        page.locator("iframe")
+        .first.content_frame.locator("#principal")
+        .content_frame.get_by_role("cell")
+        .locator("iframe")
+        .content_frame.locator("#menuLateral")
+        .content_frame
+    )
+    frame.get_by_text(menu_option).click()
+    print("Navigation to target page successful!")
+    return page, frame
+
+
+def get_beneficiario_data(payload_json, codigo_beneficiario):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=False)
+        context = browser.new_context()
+        page = context.new_page()
+
+        page.on(
+            "dialog",
+            lambda dialog: (
+                print(f"DIALOG: {dialog.message}"),
+                dialog.accept(),
+            ),
+        )
+        page.on("popup", lambda popup: (popup.wait_for_load_state(), popup.close()))
+
+        page.set_default_timeout(retry_settings["defaultTimeout"])
+        credentials = json.loads(payload_json)
+        page, frame = login(page, credentials, "Dossiê beneficiário")
+        frame = get_pagina_principal_frame(page)
+        frame.locator("#CD_USUARIO_PLANO").clear()
+        frame.locator("#CD_USUARIO_PLANO").type(codigo_beneficiario)
+        frame.locator("#CD_USUARIO_PLANO").press('Tab')
+        content = frame.locator("#tipoUsuario").all_inner_texts()
+        print(content)
+        input("Press Enter to close the browser...")
+
+
+# browser.close()
+
+
+# await page.locator('iframe').first().contentFrame().locator('#principal').contentFrame().getByRole('cell').locator('iframe').contentFrame().locator('#paginaPrincipal').contentFrame().locator('#CD_USUARIO_PLANO').click();
+# await page.locator('iframe').first().contentFrame().locator('#principal').contentFrame().getByRole('cell').locator('iframe').contentFrame().locator('#paginaPrincipal').contentFrame().locator('#CD_USUARIO_PLANO').click();
+# await page.locator('iframe').first().contentFrame().locator('#principal').contentFrame().getByRole('cell').locator('iframe').contentFrame().locator('#paginaPrincipal').contentFrame().locator('#CD_USUARIO_PLANO').fill('09940055535742005');
+# await page.locator('iframe').first().contentFrame().locator('#principal').contentFrame().getByRole('cell').locator('iframe').contentFrame().locator('#paginaPrincipal').contentFrame().locator('#CD_USUARIO_PLANO').press('Enter')
