@@ -190,9 +190,10 @@ def get_extrato_guias(frame, codigo_beneficiario):
         total_requisicao = frame.get_by_role("cell", name="Procedimento").count()
 
     if total_requisicao == 0:
-        Client.objects.filter(codigo_beneficiario=codigo_beneficiario).update(
-            active=False
-        )
+        client = Client.objects.filter(codigo_beneficiario=codigo_beneficiario)
+        print(f"Client: {client}")
+        client.update(active=False)
+        client.save()
         return None
     else:
         try:
@@ -331,9 +332,3 @@ def get_beneficiario_data(payload_json, codigo_beneficiario):
 
 
 # browser.close()
-
-
-# await page.locator('iframe').first().contentFrame().locator('#principal').contentFrame().getByRole('cell').locator('iframe').contentFrame().locator('#paginaPrincipal').contentFrame().locator('#CD_USUARIO_PLANO').click();
-# await page.locator('iframe').first().contentFrame().locator('#principal').contentFrame().getByRole('cell').locator('iframe').contentFrame().locator('#paginaPrincipal').contentFrame().locator('#CD_USUARIO_PLANO').click();
-# await page.locator('iframe').first().contentFrame().locator('#principal').contentFrame().getByRole('cell').locator('iframe').contentFrame().locator('#paginaPrincipal').contentFrame().locator('#CD_USUARIO_PLANO').fill('09940055535742005');
-# await page.locator('iframe').first().contentFrame().locator('#principal').contentFrame().getByRole('cell').locator('iframe').contentFrame().locator('#paginaPrincipal').contentFrame().locator('#CD_USUARIO_PLANO').press('Enter')
