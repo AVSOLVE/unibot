@@ -1,11 +1,9 @@
 import json
+import os
 import math
 import time
 from datetime import datetime
 from playwright.sync_api import sync_playwright
-from asgiref.sync import sync_to_async
-from .models import Client
-
 
 # URLs and paths
 urls = {
@@ -29,6 +27,14 @@ data_positions = [1, 29, 2, 3, 17, 5, 16]
 
 
 # Utility functions
+def save_to_file(codigo_beneficiario, file_path="codigo_beneficiario_list.txt"):
+    try:
+        # Open the file in append mode or create it if it doesn't exist
+        with open(file_path, "a") as file:
+            file.write(f"{codigo_beneficiario}\n")
+        print(f"Saved {codigo_beneficiario} to {file_path}")
+    except Exception as e:
+        print(f"Error writing to file: {e}")
 def get_elapsed_time(start_time):
     time_in_seconds = math.floor((time.time() - start_time) / 1000)
     if time_in_seconds < 60:
@@ -155,7 +161,9 @@ def get_pagina_principal_frame(page):
     )
 
 
-def executar_guia(frame, codigo_beneficiario, nome_beneficiario, tipo_atendimento, quantidade):
+def executar_guia(
+    frame, codigo_beneficiario, nome_beneficiario, tipo_atendimento, quantidade
+):
     print(f"Executando GUIA: {codigo_beneficiario} - {nome_beneficiario}")
     frame.locator("#CD_USUARIO_PLANO").clear()
     frame.locator("#CD_USUARIO_PLANO").type(codigo_beneficiario)
@@ -166,8 +174,8 @@ def executar_guia(frame, codigo_beneficiario, nome_beneficiario, tipo_atendiment
         print("Beneficiário não encontrado!")
         return None
     else:
-        extrato_data = sync_to_async(get_extrato_guias)(frame, codigo_beneficiario)
-        if extrato_data:
+
+        if get_extrato_guias(frame, codigo_beneficiario):
             frame.locator('input[type="checkbox"]').first.click()
             frame.get_by_role("button", name="Gerar guia").click()
             frame.locator("select").select_option(tipo_atendimento)
@@ -189,12 +197,7 @@ def get_extrato_guias(frame, codigo_beneficiario):
         total_requisicao = frame.get_by_role("cell", name="Procedimento").count()
 
     if total_requisicao == 0:
-        sync_to_async(
-            Client.objects.filter(codigo_beneficiario=codigo_beneficiario).update(
-                active=False
-            )
-        )
-
+        save_to_file(codigo_beneficiario)
         return None
     else:
         try:
