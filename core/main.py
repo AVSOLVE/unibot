@@ -179,7 +179,7 @@ def executar_guia(frame, codigo_beneficiario, nome_beneficiario, tipo_atendiment
             return None
 
 
-async def get_extrato_guias(frame, codigo_beneficiario):
+def get_extrato_guias(frame, codigo_beneficiario):
     try:
         frame.locator('role=cell[name="Procedimento"]').first.wait_for(timeout=2000)
     except Exception as e:
@@ -189,7 +189,7 @@ async def get_extrato_guias(frame, codigo_beneficiario):
         total_requisicao = frame.get_by_role("cell", name="Procedimento").count()
 
     if total_requisicao == 0:
-        await sync_to_async(
+        sync_to_async(
             Client.objects.filter(codigo_beneficiario=codigo_beneficiario).update(
                 active=False
             )
