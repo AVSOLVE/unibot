@@ -14,6 +14,12 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import JSONRenderer
 
 
+def chunk_list(lst, chunk_size):
+    """Utility function to divide a list into chunks of given size."""
+    for i in range(0, len(lst), chunk_size):
+        yield lst[i : i + chunk_size]
+
+
 def user_login(request):
     if request.method == "POST":
         username = request.POST["username"]
@@ -33,10 +39,9 @@ def user_logout(request):
     return redirect("login")
 
 
-def chunk_list(lst, chunk_size):
-    """Utility function to divide a list into chunks of given size."""
-    for i in range(0, len(lst), chunk_size):
-        yield lst[i : i + chunk_size]
+@login_required
+def home_view(request):
+    return render(request, "index.html")
 
 
 @login_required
@@ -94,11 +99,12 @@ def run_script(request):
             status=500,
         )
 
-    return JsonResponse(
-        {"status": "success", "message": "Tasks dispatched successfully."}
-    )
+    # return JsonResponse(
+    #     {"status": "success", "message": "Tasks dispatched successfully."}
+    # )
 
 
+@login_required
 def run_script2(request):
     credentials = UnimedCredentials.objects.filter(user=request.user).first()
     if not credentials:
@@ -111,19 +117,16 @@ def run_script2(request):
     payload_json = JSONRenderer().render(serializer).decode("utf-8")
     print("Payload JSON:", payload_json)
     get_beneficiario_data(payload_json, "02220607001617033")
-    return JsonResponse(
-        {"status": "success", "message": "Tasks dispatched successfully."}
-    )
 
 
 @login_required
-def client_list_view(request):
+def client_list(request):
     client_list = Client.objects.filter(user=request.user).order_by("nome_beneficiario")
     active_clients = client_list.filter(active=True).count()
     inactive_clients = client_list.count() - active_clients
     return render(
         request,
-        "index.html",
+        "client_list.html",
         {
             "client_list": client_list,
             "active_clients": active_clients,
@@ -132,7 +135,8 @@ def client_list_view(request):
     )
 
 
-def client_create_view(request):
+@login_required
+def client_create(request):
     if request.method == "POST":
         form = ClientForm(request.POST)
         if form.is_valid():
@@ -145,6 +149,7 @@ def client_create_view(request):
     return render(request, "client_create.html", {"form": form})
 
 
+@login_required
 def client_edit(request, client_id):
     client = get_object_or_404(Client, id=client_id)
 
@@ -159,6 +164,7 @@ def client_edit(request, client_id):
     return render(request, "client_edit.html", {"form": form, "client": client})
 
 
+@login_required
 def client_update_active(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     client.active = not client.active

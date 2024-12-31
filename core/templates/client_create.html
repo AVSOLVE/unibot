@@ -1,17 +1,112 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Create</title>
-</head>
-<body>
-    <h2>Client Create</h2>
-    <form method="POST">
+{% extends 'index.html' %}
+{% load static %}
+{% block body %}
+<body class="bg-gray-100">
+  <div class="container mx-auto py-6 px-4">
+    <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">Criar Novo Cliente</h2>
+    <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+      <form method="POST">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Save</button>
-    </form>
+        <div class="space-y-6">
+          <!-- Nome do Beneficiário -->
+          <div>
+            <label for="nome_beneficiario" class="block text-sm font-medium text-gray-700">Nome do Beneficiário</label>
+            {{ form.nome_beneficiario }}
+            {% if form.nome_beneficiario.errors %}
+            <ul class="text-red-600 text-xs mt-1">
+              {% for error in form.nome_beneficiario.errors %}
+              <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
 
+          <!-- Carteirinha -->
+          <div>
+            <label for="codigo_beneficiario" class="block text-sm font-medium text-gray-700">Carteirinha</label>
+            <input 
+              type="number" 
+              id="codigo_beneficiario" 
+              name="codigo_beneficiario"
+              class="form-control w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              maxlength="17"
+              pattern="\d{17}"
+              required
+            >
+            {% if form.codigo_beneficiario.errors %}
+            <ul class="text-red-600 text-xs mt-1">
+              {% for error in form.codigo_beneficiario.errors %}
+              <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+
+          <!-- Tipo de Atendimento -->
+          <div>
+            <label for="tipo_atendimento" class="block text-sm font-medium text-gray-700">Tipo de Atendimento</label>
+            {{ form.tipo_atendimento }}
+            {% if form.tipo_atendimento.errors %}
+            <ul class="text-red-600 text-xs mt-1">
+              {% for error in form.tipo_atendimento.errors %}
+              <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+
+          <!-- Quantidade a Executar -->
+          <div>
+            <label for="quantidade" class="block text-sm font-medium text-gray-700">Quantidade a Executar</label>
+            {{ form.quantidade }}
+            {% if form.quantidade.errors %}
+            <ul class="text-red-600 text-xs mt-1">
+              {% for error in form.quantidade.errors %}
+              <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+
+          <!-- Usuário -->
+          <div>
+            <label for="user" class="block text-sm font-medium text-gray-700">Usuário</label>
+            {{ form.user }}
+            {% if form.user.errors %}
+            <ul class="text-red-600 text-xs mt-1">
+              {% for error in form.user.errors %}
+              <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+
+          <!-- Ativo -->
+          <div class="flex items-center">
+            <label for="active" class="block text-sm font-medium text-gray-700">Ativo</label>
+            <span class="pl-2">
+              {{ form.active }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-6 text-center">
+          <button type="submit" class="w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-200">
+            Criar Cliente
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
-</html>
+
+<script>
+  document.getElementById('codigo_beneficiario').addEventListener('input', function (event) {
+    if (this.value.length > 17) {
+      this.value = this.value.slice(0, 17);
+    }
+  });
+</script>
+{% endblock %}
+

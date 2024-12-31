@@ -8,34 +8,44 @@ class ClientForm(ModelForm):
         model = Client
         fields = "__all__"  # You can customize the fields here if needed
         widgets = {
-            "name": forms.TextInput(attrs={"class": "form-control"}),
-            "id_card": forms.TextInput(attrs={"class": "form-control"}),
-            "type": forms.Select(attrs={"class": "form-control"}),
-            "qtd": forms.TextInput(attrs={"class": "form-control"}),
-            "active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "nome_beneficiario": forms.TextInput(attrs={"class": "form-control"}),
+            "codigo_beneficiario": forms.NumberInput(
+                attrs={"class": "form-control", "maxlength": "17"}
+            ),
+            "tipo_atendimento": forms.Select(attrs={"class": "form-control"}),
+            "quantidade": forms.NumberInput(attrs={"class": "form-control"}),
             "user": forms.Select(attrs={"class": "form-control"}),
+            "active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
         labels = {
-            "name": "Nome do Beneficiário",
-            "id_card": "Carteirinha",
-            "type": "Tipo de Atendimento",
-            "qtd": "Quantidade a Executar",
-            "active": "Ativo",
+            "nome_beneficiario": "Nome do Beneficiário",
+            "codigo_beneficiario": "Carteirinha",
+            "tipo_atendimento": "Tipo de Atendimento",
+            "quantidade": "Quantidade a Executar",
             "user": "Usuário",
+            "active": "Ativo",
         }
         help_texts = {
-            "name": "Digite o nome do beneficiário",
-            "id_card": "Digite o número da carteirinha",
-            "type": "Selecione o tipo de atendimento",
-            "qtd": "Digite a quantidade a executar",
-            "active": "Marque se o beneficiário está ativo",
+            "nome_beneficiario": "Digite o nome do beneficiário",
+            "codigo_beneficiario": "Digite o número da carteirinha",
+            "tipo_atendimento": "Selecione o tipo de atendimento",
+            "quantidade": "Digite a quantidade a executar",
             "user": "Selecione o usuário",
+            "active": "Marque se o beneficiário está ativo",
         }
         error_messages = {
-            "name": {"required": "Este campo é obrigatório"},
-            "id_card": {"required": "Este campo é obrigatório"},
-            "type": {"required": "Este campo é obrigatório"},
-            "qtd": {"required": "Este campo é obrigatório"},
-            "active": {"required": "Este campo é obrigatório"},
+            "nome_beneficiario": {"required": "Este campo é obrigatório"},
+            "codigo_beneficiario": {"required": "Este campo é obrigatório"},
+            "tipo_atendimento": {"required": "Este campo é obrigatório"},
+            "quantidade": {"required": "Este campo é obrigatório"},
             "user": {"required": "Este campo é obrigatório"},
+            "active": {"required": "Este campo é obrigatório"},
         }
+
+    def clean_codigo_beneficiario(self):
+        codigo_beneficiario = self.cleaned_data["codigo_beneficiario"]
+        if len(str(codigo_beneficiario)) != 17:
+            raise forms.ValidationError(
+                "A carteirinha deve conter exatamente 17 dígitos."
+            )
+        return codigo_beneficiario
