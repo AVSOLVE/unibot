@@ -3,6 +3,7 @@ import math
 import time
 from datetime import datetime
 from playwright.sync_api import sync_playwright
+from .models import Client
 
 
 # URLs and paths
@@ -167,7 +168,7 @@ def executar_guia(
         print("Beneficiário não encontrado!")
         return None
     else:
-        if get_extrato_guias(frame):
+        if get_extrato_guias(frame, codigo_beneficiario):
             frame.locator('input[type="checkbox"]').first.click()
             frame.get_by_role("button", name="Gerar guia").click()
             frame.locator("select").select_option(tipo_atendimento)
@@ -179,7 +180,7 @@ def executar_guia(
             return None
 
 
-def get_extrato_guias(frame):
+def get_extrato_guias(frame, codigo_beneficiario):
     try:
         frame.locator('role=cell[name="Procedimento"]').first.wait_for(timeout=2000)
     except Exception as e:
@@ -189,6 +190,9 @@ def get_extrato_guias(frame):
         total_requisicao = frame.get_by_role("cell", name="Procedimento").count()
 
     if total_requisicao == 0:
+        Client.objects.filter(codigo_beneficiario=codigo_beneficiario).update(
+            active=False
+        )
         return None
     else:
         try:
@@ -320,7 +324,7 @@ def get_beneficiario_data(payload_json, codigo_beneficiario):
         frame = get_pagina_principal_frame(page)
         frame.locator("#CD_USUARIO_PLANO").clear()
         frame.locator("#CD_USUARIO_PLANO").type(codigo_beneficiario)
-        frame.locator("#CD_USUARIO_PLANO").press('Tab')
+        frame.locator("#CD_USUARIO_PLANO").press("Tab")
         content = frame.locator("#tipoUsuario").all_inner_texts()
         print(content)
         input("Press Enter to close the browser...")
