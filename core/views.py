@@ -119,13 +119,15 @@ def run_script2(request):
 @login_required
 def client_list_view(request):
     client_list = Client.objects.filter(user=request.user).order_by("nome_beneficiario")
-    active_clients = client_list.filter(active=True).count
+    active_clients = client_list.filter(active=True).count()
+    inactive_clients = client_list.count() - active_clients
     return render(
         request,
         "index.html",
         {
             "client_list": client_list,
             "active_clients": active_clients,
+            "inactive_clients": inactive_clients,
         },
     )
 
@@ -155,3 +157,11 @@ def client_edit(request, client_id):
         form = ClientForm(instance=client)
 
     return render(request, "client_edit.html", {"form": form, "client": client})
+
+
+def client_update_active(request, client_id):
+    client = get_object_or_404(Client, id=client_id)
+    client.active = not client.active
+    client.save()
+
+    return redirect("client_list")

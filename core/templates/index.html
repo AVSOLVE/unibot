@@ -42,13 +42,14 @@
             Resumo dos Clientes
           </h2>
           <p class="text-gray-700 mt-2">
-            Total de Clientes:
-            <span id="totalClients" class="font-bold"
-              >{{client_list.count}}</span
-            >
-            | Clientes Ativos:
-            <span id="activeClients" class="font-bold">{{active_clients}}</span>
-          </p>
+            Total:
+            <span id="totalClients" class="font-bold">{{ client_list.count }}</span>
+            | Ativos:
+            <span id="activeClients" class="font-bold">{{ active_clients }}</span>
+            | Inativos:
+            <span id="inactiveClients" class="font-bold">{{ inactive_clients }}</span>
+        </p>
+        
         </div>
         <button
           id="filterActiveButton"
@@ -78,6 +79,7 @@
               <th class="text-left px-4 py-3">Qtd</th>
               <th class="text-left px-4 py-3">Ativo</th>
               <th class="text-left px-4 py-3">Prestador</th>
+              <th class="text-left px-4 py-3">Ativar / Desativar</th>
               <th class="text-left px-4 py-3">Editar</th>
             </tr>
           </thead>
@@ -97,8 +99,17 @@
               <td class="px-4 py-2">{{ client.user }}</td>
               <td class="px-4 py-2">
                 <a
+                  href="{% url 'client_update_active' client.id %}"
+                  class="text-blue-500 no-underline"
+                  ><span
+                  class="px-3 py-1 rounded-full text-sm font-medium {{ client.active|yesno:'bg-red-200 text-red-800,bg-green-200 text-green-800' }}"
+                  >{{ client.active|yesno:'Desativar,Ativar' }}</span></a
+                >
+              </td>
+              <td class="px-4 py-2">
+                <a
                   href="{% url 'client_edit' client.id %}"
-                  class="text-blue-500 hover:underline"
+                  class="no-underline px-3 py-1 rounded-full text-sm font-medium bg-blue-200 text-blue-800' }}"
                   >Editar</a
                 >
               </td>

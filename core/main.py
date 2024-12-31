@@ -35,6 +35,8 @@ def save_to_file(codigo_beneficiario, file_path="codigo_beneficiario_list.txt"):
         print(f"Saved {codigo_beneficiario} to {file_path}")
     except Exception as e:
         print(f"Error writing to file: {e}")
+
+
 def get_elapsed_time(start_time):
     time_in_seconds = math.floor((time.time() - start_time) / 1000)
     if time_in_seconds < 60:
