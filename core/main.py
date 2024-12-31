@@ -155,11 +155,8 @@ def get_pagina_principal_frame(page):
     )
 
 
-async def executar_guia(
-    frame, codigo_beneficiario, nome_beneficiario, tipo_atendimento, quantidade
-):
-
-    print(f"Executando GUIA: {codigo_beneficiario} -  {nome_beneficiario}")
+def executar_guia(frame, codigo_beneficiario, nome_beneficiario, tipo_atendimento, quantidade):
+    print(f"Executando GUIA: {codigo_beneficiario} - {nome_beneficiario}")
     frame.locator("#CD_USUARIO_PLANO").clear()
     frame.locator("#CD_USUARIO_PLANO").type(codigo_beneficiario)
     frame.get_by_role("button", name="Consultar").click()
@@ -169,7 +166,8 @@ async def executar_guia(
         print("Beneficiário não encontrado!")
         return None
     else:
-        if await get_extrato_guias(frame, codigo_beneficiario):
+        extrato_data = sync_to_async(get_extrato_guias)(frame, codigo_beneficiario)
+        if extrato_data:
             frame.locator('input[type="checkbox"]').first.click()
             frame.get_by_role("button", name="Gerar guia").click()
             frame.locator("select").select_option(tipo_atendimento)
@@ -228,7 +226,7 @@ async def get_extrato_guias(frame, codigo_beneficiario):
             return None
 
 
-async def process_and_execute(clients, page):
+def process_and_execute(clients, page):
     try:
         for client in clients:
             try:
@@ -241,7 +239,7 @@ async def process_and_execute(clients, page):
                 frame = get_pagina_principal_frame(page)
 
                 # Execute the main action
-                result = await executar_guia(
+                result = executar_guia(
                     frame,
                     codigo_beneficiario,
                     nome_beneficiario,
@@ -261,7 +259,7 @@ async def process_and_execute(clients, page):
         print(f"Unexpected error during processing: {e}")
 
 
-async def login_and_navigate(credentials, clients):
+def login_and_navigate(credentials, clients):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=False)
         context = browser.new_context()
@@ -280,7 +278,7 @@ async def login_and_navigate(credentials, clients):
 
         page.set_default_timeout(retry_settings["defaultTimeout"])
         login_auth(credentials, page)
-        await process_and_execute(clients, page)
+        process_and_execute(clients, page)
         # input("Press Enter to close the browser...")
         browser.close()
 
