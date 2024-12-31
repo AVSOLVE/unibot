@@ -1,9 +1,41 @@
+import os
 import json
 from celery import shared_task
 from core.main import login_and_navigate
-from celery.utils.log import get_task_logger
+from .models import Client
 
-logger = get_task_logger(__name__)
+
+def read_from_file(file_path="codigo_beneficiario_list.txt"):
+    try:
+        if os.path.exists(file_path):
+            with open(file_path, "r") as file:
+                return [line.strip() for line in file.readlines()]
+        else:
+            print(f"{file_path} does not exist.")
+            return []
+    except Exception as e:
+        print(f"Error reading from file: {e}")
+        return []
+
+
+def update_clients(codigo_beneficiarios):
+    try:
+        for codigo_beneficiario in codigo_beneficiarios:
+            Client.objects.filter(codigo_beneficiario=codigo_beneficiario).update(
+                active=False
+            )
+        print("Clients updated successfully.")
+    except Exception as e:
+        print(f"Error updating clients: {e}")
+
+
+def clear_file(file_path="codigo_beneficiario_list.txt"):
+    try:
+        with open(file_path, "w") as file:
+            file.truncate()
+        print(f"Cleared file: {file_path}")
+    except Exception as e:
+        print(f"Error clearing file: {e}")
 
 
 @shared_task(bind=True, max_retries=3)
@@ -20,11 +52,15 @@ def executar_guias(self, payload_json):
             print("No active clients found to process.")
             return
 
-        print("Starting login_and_navigate...")
-        login_and_navigate(
-            credentials, clients
-        )  # Ensure this is the actual method you're calling
-        print("Finished login_and_navigate.")
+        print("Starting process...")
+        login_and_navigate(credentials, clients)
+
+        # Read from file, update clients, and clear the file
+        codigo_beneficiarios = read_from_file()
+        if codigo_beneficiarios:
+            update_clients(codigo_beneficiarios)
+            clear_file()
+
         return {"success": "Task completed successfully."}
 
     except Exception as e:
