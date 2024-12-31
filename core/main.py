@@ -3,6 +3,7 @@ import math
 import time
 from datetime import datetime
 from playwright.sync_api import sync_playwright
+from asgiref.sync import sync_to_async
 from .models import Client
 
 
@@ -180,7 +181,7 @@ def executar_guia(
             return None
 
 
-def get_extrato_guias(frame, codigo_beneficiario):
+async def get_extrato_guias(frame, codigo_beneficiario):
     try:
         frame.locator('role=cell[name="Procedimento"]').first.wait_for(timeout=2000)
     except Exception as e:
@@ -190,10 +191,12 @@ def get_extrato_guias(frame, codigo_beneficiario):
         total_requisicao = frame.get_by_role("cell", name="Procedimento").count()
 
     if total_requisicao == 0:
-        client = Client.objects.filter(codigo_beneficiario=codigo_beneficiario)
-        print(f"Client: {client}")
-        client.update(active=False)
-        client.save()
+        await sync_to_async(
+            Client.objects.filter(codigo_beneficiario=codigo_beneficiario).update(
+                active=False
+            )
+        )
+
         return None
     else:
         try:
