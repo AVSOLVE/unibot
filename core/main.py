@@ -155,7 +155,7 @@ def get_pagina_principal_frame(page):
     )
 
 
-def executar_guia(
+async def executar_guia(
     frame, codigo_beneficiario, nome_beneficiario, tipo_atendimento, quantidade
 ):
 
@@ -169,7 +169,7 @@ def executar_guia(
         print("Beneficiário não encontrado!")
         return None
     else:
-        if get_extrato_guias(frame, codigo_beneficiario):
+        if await get_extrato_guias(frame, codigo_beneficiario):
             frame.locator('input[type="checkbox"]').first.click()
             frame.get_by_role("button", name="Gerar guia").click()
             frame.locator("select").select_option(tipo_atendimento)
@@ -228,7 +228,7 @@ async def get_extrato_guias(frame, codigo_beneficiario):
             return None
 
 
-def process_and_execute(clients, page):
+async def process_and_execute(clients, page):
     try:
         for client in clients:
             try:
@@ -241,7 +241,7 @@ def process_and_execute(clients, page):
                 frame = get_pagina_principal_frame(page)
 
                 # Execute the main action
-                result = executar_guia(
+                result = await executar_guia(
                     frame,
                     codigo_beneficiario,
                     nome_beneficiario,
@@ -261,7 +261,7 @@ def process_and_execute(clients, page):
         print(f"Unexpected error during processing: {e}")
 
 
-def login_and_navigate(credentials, clients):
+async def login_and_navigate(credentials, clients):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=False)
         context = browser.new_context()
@@ -280,7 +280,7 @@ def login_and_navigate(credentials, clients):
 
         page.set_default_timeout(retry_settings["defaultTimeout"])
         login_auth(credentials, page)
-        process_and_execute(clients, page)
+        await process_and_execute(clients, page)
         # input("Press Enter to close the browser...")
         browser.close()
 

@@ -7,7 +7,7 @@ logger = get_task_logger(__name__)
 
 
 @shared_task(bind=True, max_retries=3)
-def executar_guias(self, payload_json):
+async def executar_guias(self, payload_json):
     try:
         payload = json.loads(payload_json)
         credentials = payload["credentials"]
@@ -21,7 +21,7 @@ def executar_guias(self, payload_json):
             return
 
         print("Starting login_and_navigate...")
-        login_and_navigate(
+        await login_and_navigate(
             credentials, clients
         )  # Ensure this is the actual method you're calling
         print("Finished login_and_navigate.")
