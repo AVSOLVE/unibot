@@ -1,14 +1,10 @@
 # TODO
 
-- logar e buscar os dados do cliente baseado na carteirinha
 - pagina de edicao de clientes
-- pagina de cadastro de usuario + credenciais
-- pagina de editar usuario + credenciais
-- barra de feedback no front
+- criar pagina p executar: mostrar lista de clientes + botao executar + relatorio em tempo real
+- logar e buscar os dados do cliente baseado na carteirinha
 - multi usuarios auth
 - urls - 404
 - sobre nos + contato
-- responsividade
 - cron semanal
-- relatorio de guias
 - reduce img size
