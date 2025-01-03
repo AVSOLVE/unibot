@@ -1,8 +1,8 @@
 import json
-import os
 import math
 import time
 from datetime import datetime
+
 from playwright.sync_api import sync_playwright
 
 # URLs and paths
@@ -77,7 +77,7 @@ def retry(fn):
             return fn()
         except Exception as e:
             if attempt < retries:
-                print(f"Attempt {attempt} failed. Retrying in {delay} seconds...")
+                print(f"Attempt {attempt} failed. Retrying in {delay} seconds..., {e}")
                 time.sleep(delay)
             else:
                 print(f"All {retries} attempts failed.")
@@ -176,7 +176,6 @@ def executar_guia(
         print("Beneficiário não encontrado!")
         return None
     else:
-
         if get_extrato_guias(frame, codigo_beneficiario):
             frame.locator('input[type="checkbox"]').first.click()
             frame.get_by_role("button", name="Gerar guia").click()

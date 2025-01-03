@@ -1,6 +1,10 @@
 import os
 import sys
+
 import django
+from django.contrib.auth.models import User
+
+from core.models import Client
 
 # Make sure this is set before any Django imports
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
@@ -16,8 +20,6 @@ except Exception as e:
     sys.exit(1)
 
 # Now you can safely import your models
-from django.contrib.auth.models import User
-from core.models import Client
 
 # The data to be imported (you can also load this data from a file if needed)
 data = """
@@ -167,7 +169,7 @@ data = """
 00640000000136700;Cristino Ribeiro Malta Neto
 02222303000125020;VERA REGINA ALVES
 08650004097197008;IRON TEODORO DA SILVA
-08650003691582000;BRUNO PEREIRA DOS SANTOS 
+08650003691582000;BRUNO PEREIRA DOS SANTOS
 00340087000332008;MARIA FATIMA ALVES SILVA
 02222303000012005;ALDEMAR BRUSTOLONI
 02223167000021003;Rosilene Rodrigues Costa

@@ -1,7 +1,7 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, RegexValidator
+from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.core.validators import RegexValidator, MinValueValidator
 
 
 class TimeStamped(models.Model):
@@ -42,6 +42,7 @@ class TypeChoices(models.TextChoices):
     TELESSAUDE = "22", _("Telessaúde")
     TERAPIA_RENAL_SUBSTITUTIVA = "10", _("Terapia Renal Substitutiva (TRS)")
 
+
 class UnimedCredentials(TimeStamped):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     login = models.CharField(max_length=255, verbose_name="Unimed Login")
@@ -52,13 +53,17 @@ class UnimedCredentials(TimeStamped):
 
 
 class Client(TimeStamped):
-    nome_beneficiario = models.CharField(max_length=255, verbose_name=_("Nome do Beneficiário"))
+    nome_beneficiario = models.CharField(
+        max_length=255, verbose_name=_("Nome do Beneficiário")
+    )
     codigo_beneficiario = models.CharField(
         max_length=17,
         verbose_name=_("Carteirinha"),
         unique=True,
         validators=[
-            RegexValidator(r"^\d{17}$", _("A carteirinha deve conter exatos 17 dígitos."))
+            RegexValidator(
+                r"^\d{17}$", _("A carteirinha deve conter exatos 17 dígitos.")
+            )
         ],
     )
     tipo_atendimento = models.CharField(

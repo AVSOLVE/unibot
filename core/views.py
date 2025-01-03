@@ -1,17 +1,18 @@
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render, redirect
+from celery import group
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-
-from core.main import get_beneficiario_data
-from .serializers import CredentialsSerializer, PayloadSerializer
-from .tasks import executar_guias
-from .form import ClientForm
-from celery import group
-from .models import Client, PayloadLog, UnimedCredentials
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import JSONRenderer
+
+from core.main import get_beneficiario_data
+
+from .form import ClientForm
+from .models import Client, PayloadLog, UnimedCredentials
+from .serializers import CredentialsSerializer, PayloadSerializer
+from .tasks import executar_guias
 
 
 def chunk_list(lst, chunk_size):

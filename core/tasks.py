@@ -1,7 +1,10 @@
-import os
 import json
+import os
+
 from celery import shared_task
+
 from core.main import login_and_navigate
+
 from .models import Client
 
 

@@ -55,4 +55,3 @@ RUN chmod +x /entrypoint.sh
 ENV PATH="/code/.venv/bin:$PATH"
 # Set the entrypoint for the container
 CMD ["/entrypoint.sh"]
-

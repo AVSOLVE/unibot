@@ -1,5 +1,6 @@
-from core.models import Client, UnimedCredentials
 from rest_framework import serializers
+
+from core.models import Client, UnimedCredentials
 
 
 class ClientSerializer(serializers.ModelSerializer):
