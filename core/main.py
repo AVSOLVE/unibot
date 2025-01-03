@@ -30,6 +30,7 @@ data_positions = [1, 29, 2, 3, 17, 5, 16]
 
 # Utility functions
 def save_to_file(codigo_beneficiario, file_path="codigo_beneficiario_list.txt"):
+    print(f"Saving {codigo_beneficiario} to {file_path}")
     try:
         with open(file_path, "a") as file:
             file.write(f"{codigo_beneficiario}\n")
@@ -263,7 +264,7 @@ def process_and_execute(clients, page):
                 if result is None:
                     frame.get_by_role("button", name="Nova consulta").click()
 
-                send_message_to_channel_group(nome_beneficiario)
+                save_to_file(codigo_beneficiario)
 
             except Exception as e:
                 print(f"Error processing client {codigo_beneficiario}: {e}")

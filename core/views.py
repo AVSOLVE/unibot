@@ -15,12 +15,6 @@ from .serializers import CredentialsSerializer, PayloadSerializer
 from .tasks import executar_guias
 
 
-def chunk_list(lst, chunk_size):
-    """Utility function to divide a list into chunks of given size."""
-    for i in range(0, len(lst), chunk_size):
-        yield lst[i : i + chunk_size]
-
-
 def user_login(request):
     if request.method == "POST":
         username = request.POST["username"]
@@ -45,6 +39,11 @@ def home_view(request):
     return render(request, "index.html")
 
 
+def chunk_list(client_list, chunk_size):
+    for i in range(0, len(client_list), chunk_size):
+        yield client_list[i : i + chunk_size]
+
+
 @login_required
 def run_script(request):
     client_list = list(
@@ -57,13 +56,16 @@ def run_script(request):
             {"status": "error", "message": "No credentials found."}, status=400
         )
 
-    # Divide clients into chunks of 10
+    # Divide clients into chunks of 12
     chunk_size = 12
     client_chunks = list(chunk_list(client_list, chunk_size))
 
     # Prepare tasks for each chunk
     celery_tasks = []
+    seen_chunks = []  # List to store serialized chunks for comparison
+
     for chunk in client_chunks:
+        # Serialize the chunk for comparison
         payload_data = PayloadSerializer.from_models(chunk, credentials)
         serializer = PayloadSerializer(data=payload_data)
         try:
@@ -72,11 +74,20 @@ def run_script(request):
                 JSONRenderer().render(serializer.validated_data).decode("utf-8")
             )
 
+            # Check if this chunk is already in the seen chunks
+            if payload_json in seen_chunks:
+                print("Duplicate chunk found, skipping...")
+                continue
+
             # Save the payload log
             PayloadLog.objects.create(payload_data=serializer.validated_data)
 
+            # Add the serialized chunk to the seen chunks for future comparisons
+            seen_chunks.append(payload_json)
+
             # Create a Celery task for this chunk
             celery_tasks.append(executar_guias.s(payload_json))
+
         except ValidationError as e:
             print("Payload Validation Error for chunk:", e.detail)
             return JsonResponse({"status": "error", "message": e.detail}, status=400)
@@ -89,9 +100,12 @@ def run_script(request):
 
     # Execute all tasks in parallel
     try:
-        workflow = group(celery_tasks)
-        result = workflow.apply_async()
-        print("Workflow Task ID:", result.id)
+        if celery_tasks:
+            workflow = group(celery_tasks)
+            result = workflow.apply_async()
+            print("Workflow Task ID:", result.id)
+        else:
+            print("No tasks to dispatch.")
     except Exception as e:
         print("Error Dispatching Celery Tasks:", str(e))
         return JsonResponse(
