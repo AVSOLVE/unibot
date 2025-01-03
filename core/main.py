@@ -1,9 +1,9 @@
+import asyncio
 import json
 import math
 import time
 from datetime import datetime
 
-from asgiref.sync import sync_to_async
 from channels.layers import get_channel_layer
 from playwright.sync_api import sync_playwright
 
@@ -258,6 +258,7 @@ async def process_and_execute(clients, page):
                 if result is None:
                     frame.get_by_role("button", name="Nova consulta").click()
 
+                # Send data to the channel group
                 await channel_layer.group_send(
                     "live_data",
                     {
@@ -293,7 +294,7 @@ def login_and_navigate(credentials, clients):
 
         page.set_default_timeout(retry_settings["defaultTimeout"])
         login_auth(credentials, page)
-        sync_to_async(process_and_execute)(clients, page)
+        asyncio.run(process_and_execute(clients, page))
         # input("Press Enter to close the browser...")
         browser.close()
 
