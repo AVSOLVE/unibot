@@ -28,7 +28,6 @@ data_positions = [1, 29, 2, 3, 17, 5, 16]
 
 # Utility functions
 def save_to_file(codigo_beneficiario, file_path="codigo_beneficiario_list.txt"):
-    print(f"Saving {codigo_beneficiario} to {file_path}")
     try:
         with open(file_path, "a") as file:
             file.write(f"{codigo_beneficiario}\n")
@@ -227,6 +226,7 @@ def get_extrato_guias(frame, codigo_beneficiario):
 
 
 def process_and_execute(clients, page):
+    results = []
     try:
         for client in clients:
             try:
@@ -235,10 +235,10 @@ def process_and_execute(clients, page):
                 tipo_atendimento = client["tipo_atendimento"]
                 quantidade = client["quantidade"]
 
-                # Retrieve the main frame
                 frame = get_pagina_principal_frame(page)
                 print(f"Processing client: {codigo_beneficiario}")
-                # Execute the main action
+
+                # Execute the guide
                 result = executar_guia(
                     frame,
                     codigo_beneficiario,
@@ -247,15 +247,21 @@ def process_and_execute(clients, page):
                     quantidade,
                 )
 
-                # Handle result and navigate back if necessary
-                if result is None:
+                # Determine the client's status
+                if result not in [None, False]:
+                    cliente_ativo = f"{codigo_beneficiario};{nome_beneficiario};true\n"
+                else:
                     frame.get_by_role("button", name="Nova consulta").click()
+                    cliente_ativo = f"{codigo_beneficiario};{nome_beneficiario};false\n"
 
-                save_to_file(client, paths["outputFile"])
+                results.append(cliente_ativo)
 
             except Exception as e:
                 print(f"Error processing client {codigo_beneficiario}: {e}")
                 continue
+
+        # Save all results at once after processing
+        save_to_file("\n".join(results), paths["outputFile"])
 
     except Exception as e:
         print(f"Unexpected error during processing: {e}")

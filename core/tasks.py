@@ -26,6 +26,7 @@ def read_and_process_file(file_path="processed_clients.json"):
         if os.path.exists(file_path):
             with open(file_path, "r") as file:
                 lines = file.readlines()
+                print(lines)
 
             unique_lines = list(set(line.strip() for line in lines))
 
@@ -59,15 +60,21 @@ def read_from_file(file_path="codigo_beneficiario_list.txt"):
         return []
 
 
-def update_clients(codigo_beneficiarios):
+def deactivate_clients():
+    file = "codigo_beneficiario_list.txt"
+    codigo_beneficiarios = read_from_file(file)
+    if not codigo_beneficiarios:
+        print("Sem clientes para desativar.")
+        return
     try:
         for codigo_beneficiario in codigo_beneficiarios:
             Client.objects.filter(codigo_beneficiario=codigo_beneficiario).update(
                 active=False
             )
-        print("Clients updated successfully.")
+        clear_file(file)
+        print("Clientes desativados com sucesso!")
     except Exception as e:
-        print(f"Error updating clients: {e}")
+        print(f"Erro ao desativar cliente: {e}")
 
 
 def clear_file(file_path="codigo_beneficiario_list.txt"):
@@ -82,7 +89,6 @@ def clear_file(file_path="codigo_beneficiario_list.txt"):
 @shared_task(bind=True)
 def executar_guias(self, **kwargs):
     try:
-        # Access payload_json from kwargs
         payload_json = kwargs.get("payload_json")
 
         if not payload_json:
@@ -101,13 +107,7 @@ def executar_guias(self, **kwargs):
 
         print("Starting process...")
         login_and_navigate(credentials, clients)
-
-        # Read and process files
-        codigo_beneficiarios = read_from_file()
-        if codigo_beneficiarios:
-            update_clients(codigo_beneficiarios)
-            # clear_file()
-
+        deactivate_clients()
         read_and_process_file()
 
         return {"success": "Task completed successfully."}
