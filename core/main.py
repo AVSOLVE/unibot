@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 
 from channels.layers import get_channel_layer
-from playwright.sync_api import async_playwright
+from playwright.async_api import async_playwright
 
 # URLs and paths
 urls = {
