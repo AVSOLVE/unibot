@@ -27,15 +27,20 @@ def read_and_process_file(file_path="processed_clients.json"):
             with open(file_path, "r") as file:
                 lines = file.readlines()
 
-            # Process each line
-            with open(file_path, "w") as file:
-                for line in lines:
-                    message = line.strip()
-                    if message:
-                        send_channel_message(message)
-                        print(f"Sent message: {message}")
-                    # We don't need to write anything back to the file, effectively removing the line
+            # Remove duplicates (set automatically removes duplicates)
+            unique_lines = list(set(line.strip() for line in lines))
 
+            # Process each unique line
+            for line in unique_lines:
+                if line:
+                    send_channel_message(line)
+                    print(f"Sent message: {line}")
+
+            # After processing, clean the file by writing an empty file
+            with open(file_path, "w") as file:
+                file.truncate(0)  # Clear the file content
+
+            print(f"File {file_path} cleaned after processing.")
         else:
             print(f"{file_path} does not exist.")
     except Exception as e:
@@ -75,7 +80,7 @@ def clear_file(file_path="codigo_beneficiario_list.txt"):
         print(f"Error clearing file: {e}")
 
 
-@shared_task()
+@shared_task(bind=True)
 def executar_guias(payload_json):
     try:
         payload = json.loads(payload_json)
@@ -96,8 +101,8 @@ def executar_guias(payload_json):
         if codigo_beneficiarios:
             update_clients(codigo_beneficiarios)
             clear_file()
-            read_and_process_file()
 
+        read_and_process_file()
         return {"success": "Task completed successfully."}
 
     except Exception as e:

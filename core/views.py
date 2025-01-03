@@ -102,6 +102,7 @@ def run_script(request):
     try:
         if celery_tasks:
             workflow = group(celery_tasks)
+            print("WF", workflow)
             result = workflow.apply_async()
             print("Workflow Task ID:", result.id)
         else:
