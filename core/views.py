@@ -104,6 +104,7 @@ def run_script(request):
             workflow = group(celery_tasks)
             result = workflow.apply_async()
             print("Workflow Task ID:", result.id)
+            print("Workflow Task ID:", result)
         else:
             print("No tasks to dispatch.")
     except Exception as e:
