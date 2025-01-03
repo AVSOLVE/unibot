@@ -3,6 +3,7 @@ import math
 import time
 from datetime import datetime
 
+from asgiref.sync import sync_to_async
 from channels.layers import get_channel_layer
 from playwright.sync_api import sync_playwright
 
@@ -292,7 +293,7 @@ def login_and_navigate(credentials, clients):
 
         page.set_default_timeout(retry_settings["defaultTimeout"])
         login_auth(credentials, page)
-        process_and_execute(clients, page)
+        sync_to_async(process_and_execute)(clients, page)
         # input("Press Enter to close the browser...")
         browser.close()
 
