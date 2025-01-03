@@ -3,7 +3,6 @@ import math
 import time
 from datetime import datetime
 
-from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from playwright.sync_api import sync_playwright
 
@@ -258,7 +257,7 @@ def process_and_execute(clients, page):
                 if result is None:
                     frame.get_by_role("button", name="Nova consulta").click()
 
-                async_to_sync(channel_layer.group_send)(
+                channel_layer.group_send(
                     "live_data",
                     {
                         "type": "live_data_message",
