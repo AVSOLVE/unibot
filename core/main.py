@@ -231,7 +231,7 @@ def get_extrato_guias(frame, codigo_beneficiario):
             return None
 
 
-def process_and_execute(clients, page):
+async def process_and_execute(clients, page):
     channel_layer = get_channel_layer()
     try:
         for client in clients:
@@ -257,7 +257,7 @@ def process_and_execute(clients, page):
                 if result is None:
                     frame.get_by_role("button", name="Nova consulta").click()
 
-                channel_layer.group_send(
+                await channel_layer.group_send(
                     "live_data",
                     {
                         "type": "live_data_message",
