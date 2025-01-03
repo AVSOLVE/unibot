@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 
 from channels.layers import get_channel_layer
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import async_playwright
 
 # URLs and paths
 urls = {
@@ -30,7 +30,6 @@ data_positions = [1, 29, 2, 3, 17, 5, 16]
 # Utility functions
 def save_to_file(codigo_beneficiario, file_path="codigo_beneficiario_list.txt"):
     try:
-        # Open the file in append mode or create it if it doesn't exist
         with open(file_path, "a") as file:
             file.write(f"{codigo_beneficiario}\n")
         print(f"Saved {codigo_beneficiario} to {file_path}")
@@ -125,37 +124,33 @@ def match_code(code):
     return code_map.get(code, None)
 
 
-def login_auth(credentials, page):
-    page.goto(urls["loginPage"], wait_until="domcontentloaded")
+async def login_auth(credentials, page):
+    await page.goto(urls["loginPage"], wait_until="domcontentloaded")
     frame = page.frame_locator("iframe >> nth=0").frame_locator("#principal")
-    frame.locator("#tipoUsuario").select_option("P")
-    frame.locator("#nmUsuario").fill(credentials["login"])
-    frame.locator("#dsSenha").fill(credentials["password"])
-    frame.get_by_role("button", name="Entrar").click()
+    await frame.locator("#tipoUsuario").select_option("P")
+    await frame.locator("#nmUsuario").fill(credentials["login"])
+    await frame.locator("#dsSenha").fill(credentials["password"])
+    await frame.get_by_role("button", name="Entrar").click()
     print("Login successful!")
-    frame = navigate_executar_guia(page)
-    return frame
+    return await navigate_executar_guia(page)
 
 
-def navigate_executar_guia(page):
+async def navigate_executar_guia(page):
     frame = (
-        page.locator("iframe")
-        .first.content_frame.locator("#principal")
-        .content_frame.get_by_role("cell")
-        .locator("iframe")
-        .content_frame.locator("#menuLateral")
-        .content_frame
+        page.frame_locator("iframe >> nth=0")
+        .frame_locator("#principal")
+        .frame_locator("td iframe")
+        .frame_locator("frame >> nth=0")
     )
-    frame.get_by_text("Execução da requisição").click()
-    frame.get_by_text("» Executar requisição").click()
-    frame = get_pagina_principal_frame(page)
+    await frame.get_by_text("Execução da requisição").click()
+    await frame.get_by_text("» Executar requisição").click()
     print("Navigation to target page successful!")
-    return frame
+    return await get_principal_frame(page)
 
 
-def get_pagina_principal_frame(page):
+async def get_pagina_principal_frame(page):
     return (
-        page.locator("iframe")
+        await page.locator("iframe")
         .first.content_frame.locator("#principal")
         .content_frame.get_by_role("cell")
         .locator("iframe")
@@ -164,34 +159,36 @@ def get_pagina_principal_frame(page):
     )
 
 
-def executar_guia(
+async def executar_guia(
     frame, codigo_beneficiario, nome_beneficiario, tipo_atendimento, quantidade
 ):
     print(f"Executando GUIA: {codigo_beneficiario} - {nome_beneficiario}")
-    frame.locator("#CD_USUARIO_PLANO").clear()
-    frame.locator("#CD_USUARIO_PLANO").type(codigo_beneficiario)
-    frame.get_by_role("button", name="Consultar").click()
+    await frame.locator("#CD_USUARIO_PLANO").clear()
+    await frame.locator("#CD_USUARIO_PLANO").type(codigo_beneficiario)
+    await frame.get_by_role("button", name="Consultar").click()
     nomeBeneficiario = frame.locator("#NM_SEGURADO").input_value()
 
     if not nomeBeneficiario:
         print("Beneficiário não encontrado!")
         return None
     else:
-        if get_extrato_guias(frame, codigo_beneficiario):
-            frame.locator('input[type="checkbox"]').first.click()
-            frame.get_by_role("button", name="Gerar guia").click()
-            frame.locator("select").select_option(tipo_atendimento)
-            frame.locator('input[type="text"]').fill(str(quantidade))
-            frame.get_by_role("button", name="Confirmar geração de guias").click()
-            frame.get_by_role("button", name="Voltar").click()
+        if await get_extrato_guias(frame, codigo_beneficiario):
+            await frame.locator('input[type="checkbox"]').first.click()
+            await frame.get_by_role("button", name="Gerar guia").click()
+            await frame.locator("select").select_option(tipo_atendimento)
+            await frame.locator('input[type="text"]').fill(str(quantidade))
+            await frame.get_by_role("button", name="Confirmar geração de guias").click()
+            await frame.get_by_role("button", name="Voltar").click()
             return True
         else:
             return None
 
 
-def get_extrato_guias(frame, codigo_beneficiario):
+async def get_extrato_guias(frame, codigo_beneficiario):
     try:
-        frame.locator('role=cell[name="Procedimento"]').first.wait_for(timeout=2000)
+        await frame.locator('role=cell[name="Procedimento"]').first.wait_for(
+            timeout=2000
+        )
     except Exception as e:
         total_requisicao = 0
         print(f"entrou extrato_guias {e}")
@@ -253,10 +250,10 @@ async def process_and_execute(clients, page):
                 quantidade = client["quantidade"]
 
                 # Retrieve the main frame
-                frame = get_pagina_principal_frame(page)
-
+                frame = await get_pagina_principal_frame(page)
+                print(f"Processing client: {codigo_beneficiario}")
                 # Execute the main action
-                result = executar_guia(
+                result = await executar_guia(
                     frame,
                     codigo_beneficiario,
                     nome_beneficiario,
@@ -266,7 +263,7 @@ async def process_and_execute(clients, page):
 
                 # Handle result and navigate back if necessary
                 if result is None:
-                    frame.get_by_role("button", name="Nova consulta").click()
+                    await frame.get_by_role("button", name="Nova consulta").click()
 
                 await send_message_to_channel_group(client)
 
@@ -279,10 +276,10 @@ async def process_and_execute(clients, page):
 
 
 async def login_and_navigate(credentials, clients):
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
-        context = browser.new_context()
-        page = context.new_page()
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=True)
+        context = await browser.new_context()
+        page = await context.new_page()
 
         page.on(
             "dialog",
@@ -296,10 +293,11 @@ async def login_and_navigate(credentials, clients):
         page.on("popup", lambda popup: (popup.wait_for_load_state(), popup.close()))
 
         page.set_default_timeout(retry_settings["defaultTimeout"])
-        login_auth(credentials, page)
-        await process_and_execute(clients, page)
-        # input("Press Enter to close the browser...")
-        browser.close()
+        try:
+            await login_auth(credentials, page)
+            await process_and_execute(clients, page)
+        finally:
+            await browser.close()
 
 
 def login(page, credentials, menu_option):
@@ -324,8 +322,8 @@ def login(page, credentials, menu_option):
     return page, frame
 
 
-def get_beneficiario_data(payload_json, codigo_beneficiario):
-    with sync_playwright() as playwright:
+async def get_beneficiario_data(payload_json, codigo_beneficiario):
+    with async_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         context = browser.new_context()
         page = context.new_page()
