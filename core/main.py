@@ -265,7 +265,7 @@ def process_and_execute(clients, page):
 
 def login_and_navigate(credentials, clients):
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=False)
+        browser = playwright.chromium.launch(headless=True)
         context = browser.new_context()
         page = context.new_page()
 
@@ -311,7 +311,7 @@ def login(page, credentials, menu_option):
 
 def get_beneficiario_data(payload_json, codigo_beneficiario):
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=False)
+        browser = playwright.chromium.launch(headless=True)
         context = browser.new_context()
         page = context.new_page()
 

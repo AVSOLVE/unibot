@@ -2,6 +2,7 @@ import json
 import os
 
 from celery import shared_task
+from channels.layers import get_channel_layer
 
 from core.main import login_and_navigate
 
@@ -43,6 +44,7 @@ def clear_file(file_path="codigo_beneficiario_list.txt"):
 
 @shared_task(bind=True, max_retries=3)
 def executar_guias(self, payload_json):
+    channel_layer = get_channel_layer()
     try:
         payload = json.loads(payload_json)
         credentials = payload["credentials"]
@@ -64,6 +66,13 @@ def executar_guias(self, payload_json):
             update_clients(codigo_beneficiarios)
             clear_file()
 
+        channel_layer.group_send(
+            "live_data",  # Name of the group
+            {
+                "type": "live_data_message",
+                "message": "deu certo",
+            },
+        )
         return {"success": "Task completed successfully."}
 
     except Exception as e:

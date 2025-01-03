@@ -133,5 +133,24 @@
       filterActiveButton.classList.add('bg-green-500', 'hover:bg-green-600');
     }
   });
+
+  let url = `ws://${window.location.host}/ws/live-data/`;
+
+  const socket = new WebSocket('ws://localhost:8001/ws/live-data/');
+
+socket.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    console.log('Message received:', data.message);
+};
+
+socket.onopen = function() {
+    console.log('WebSocket connected!');
+    socket.send(JSON.stringify({ message: 'Hello from client!' }));
+};
+
+socket.onclose = function() {
+    console.log('WebSocket disconnected.');
+};
+
 </script>
 {% endblock %}
