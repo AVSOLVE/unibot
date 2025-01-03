@@ -4,7 +4,6 @@ import math
 import time
 from datetime import datetime
 
-from asgiref.sync import sync_to_async
 from channels.layers import get_channel_layer
 from playwright.sync_api import sync_playwright
 
@@ -233,10 +232,10 @@ def get_extrato_guias(frame, codigo_beneficiario):
             return None
 
 
-def send_message_to_channel_group(message):
+async def send_message_to_channel_group(message):
     # Send message asynchronously using sync_to_async
     channel_layer = get_channel_layer()
-    sync_to_async(channel_layer.group_send)(
+    await channel_layer.group_send(
         "live_data",
         {
             "type": "live_data_message",
