@@ -227,10 +227,9 @@ def get_extrato_guias(frame, codigo_beneficiario):
             return None
 
 
-async def send_message_to_channel_group(message):
-    # Send message asynchronously using sync_to_async
+def send_message_to_channel_group(message):
     channel_layer = get_channel_layer()
-    await channel_layer.group_send(
+    async_to_sync(channel_layer.group_send)(
         "live_data",
         {
             "type": "live_data_message",
@@ -264,7 +263,7 @@ def process_and_execute(clients, page):
                 if result is None:
                     frame.get_by_role("button", name="Nova consulta").click()
 
-                async_to_sync(send_message_to_channel_group)(nome_beneficiario)
+                send_message_to_channel_group(nome_beneficiario)
 
             except Exception as e:
                 print(f"Error processing client {codigo_beneficiario}: {e}")

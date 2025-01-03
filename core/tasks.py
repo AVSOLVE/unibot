@@ -1,25 +1,11 @@
 import json
 import os
 
-from asgiref.sync import async_to_sync
 from celery import shared_task
-from channels.layers import get_channel_layer
 
 from core.main import login_and_navigate
 
 from .models import Client
-
-
-def send_message_to_channel_group(message):
-    # Send message asynchronously using sync_to_async
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        "live_data",
-        {
-            "type": "live_data_message",
-            "message": message,
-        },
-    )
 
 
 def read_from_file(file_path="codigo_beneficiario_list.txt"):
@@ -55,8 +41,8 @@ def clear_file(file_path="codigo_beneficiario_list.txt"):
         print(f"Error clearing file: {e}")
 
 
-@shared_task(bind=True, max_retries=3)
-def executar_guias(self, payload_json):
+@shared_task()
+def executar_guias(payload_json):
     try:
         payload = json.loads(payload_json)
         credentials = payload["credentials"]
@@ -71,8 +57,7 @@ def executar_guias(self, payload_json):
 
         print("Starting process...")
         login_and_navigate(credentials, clients)
-        send_message_to_channel_group(clients)
-        # Read from file, update clients, and clear the file
+
         codigo_beneficiarios = read_from_file()
         if codigo_beneficiarios:
             update_clients(codigo_beneficiarios)
