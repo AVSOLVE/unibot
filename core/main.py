@@ -3,7 +3,7 @@ import math
 import time
 from datetime import datetime
 
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from playwright.sync_api import sync_playwright
 
@@ -227,10 +227,10 @@ def get_extrato_guias(frame, codigo_beneficiario):
             return None
 
 
-def send_message_to_channel_group(message):
+async def send_message_to_channel_group(message):
     # Send message asynchronously using sync_to_async
     channel_layer = get_channel_layer()
-    sync_to_async(channel_layer.group_send)(
+    await channel_layer.group_send(
         "live_data",
         {
             "type": "live_data_message",
@@ -264,7 +264,7 @@ def process_and_execute(clients, page):
                 if result is None:
                     frame.get_by_role("button", name="Nova consulta").click()
 
-                send_message_to_channel_group(nome_beneficiario)
+                async_to_sync(send_message_to_channel_group)(nome_beneficiario)
 
             except Exception as e:
                 print(f"Error processing client {codigo_beneficiario}: {e}")
