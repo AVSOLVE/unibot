@@ -1,4 +1,8 @@
+import time
+
+from asgiref.sync import async_to_sync
 from celery import group
+from channels.layers import get_channel_layer
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -6,6 +10,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import JSONRenderer
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 from core.main import get_beneficiario_data
 
@@ -13,6 +19,44 @@ from .form import ClientForm
 from .models import Client, PayloadLog, UnimedCredentials
 from .serializers import CredentialsSerializer, PayloadSerializer
 from .tasks import executar_guias
+
+
+class FileChangeHandler(FileSystemEventHandler):
+    def on_modified(self, event):
+        """Called when the observed file is modified."""
+        if event.src_path.endswith("processed_clients.json"):
+            print(f"File modified: {event.src_path}")
+            self.send_channel_message()
+
+    def send_channel_message(self):
+        """Send a message to the WebSocket channel."""
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "live_data",  # Replace with the name of your channel group
+            {
+                "type": "live_data_message",  # The method in your consumer
+                "message": "File has been updated with new client data.",
+            },
+        )
+
+
+def observe_file(file_path):
+    """Observe changes in the file."""
+    event_handler = FileChangeHandler()
+    observer = Observer()
+    observer.schedule(event_handler, path=file_path, recursive=False)
+    observer.start()
+
+    try:
+        while True:
+            time.sleep(1)  # Keep the program running to watch the file
+    except KeyboardInterrupt:
+        observer.stop()
+        observer.join()
+
+
+if __name__ == "__main__":
+    observe_file("./processed_clients.json")
 
 
 def user_login(request):

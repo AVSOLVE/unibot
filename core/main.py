@@ -3,8 +3,6 @@ import math
 import time
 from datetime import datetime
 
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 from playwright.sync_api import sync_playwright
 
 # URLs and paths
@@ -14,7 +12,7 @@ urls = {
 }
 
 paths = {
-    "outputFile": "guiasFaturar.csv",
+    "outputFile": "processed_clients.json",
 }
 
 # Retry settings
@@ -228,17 +226,6 @@ def get_extrato_guias(frame, codigo_beneficiario):
             return None
 
 
-def send_message_to_channel_group(message):
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        "live_data",
-        {
-            "type": "live_data_message",
-            "message": message,
-        },
-    )
-
-
 def process_and_execute(clients, page):
     try:
         for client in clients:
@@ -264,7 +251,7 @@ def process_and_execute(clients, page):
                 if result is None:
                     frame.get_by_role("button", name="Nova consulta").click()
 
-                save_to_file(codigo_beneficiario)
+                save_to_file(client, paths["outputFile"])
 
             except Exception as e:
                 print(f"Error processing client {codigo_beneficiario}: {e}")

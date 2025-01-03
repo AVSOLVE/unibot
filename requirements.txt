@@ -12,3 +12,4 @@ psycopg2-binary==2.9.9
 redis==5.2.0
 uvicorn==0.34.0
 websockets
+watchdog
