@@ -5,14 +5,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 class LiveDataConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        # Join the live_data group
-        self.group_name = "live_data"
-        await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
+        await self.channel_layer.group_add("live_data", self.channel_name)
 
     async def disconnect(self, close_code):
-        # Leave the group when the WebSocket closes
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        await self.channel_layer.group_discard("live_data", self.channel_name)
 
     # Receive message from WebSocket
     async def receive(self, text_data):

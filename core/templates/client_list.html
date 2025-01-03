@@ -134,9 +134,14 @@
     }
   });
 
-  let url = `ws://${window.location.host}/ws/live-data/`;
+  const websocketProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const url = `${websocketProtocol}://${window.location.host}/ws/live-data/`;
+  const socket = new WebSocket(url);
 
-  const socket = new WebSocket('ws://localhost:8001/ws/live-data/');
+  socket.addEventListener('message', function (event) {
+    const data = JSON.parse(event.data);
+    console.log('Message received:', data.message);
+  });
 
 socket.onmessage = function(event) {
     const data = JSON.parse(event.data);

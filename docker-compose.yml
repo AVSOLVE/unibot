@@ -3,7 +3,9 @@ services:
     container_name: django
     build:
       context: .
-    command: uvicorn app.asgi:application --host 0.0.0.0 --port 8000 --workers 4 --log-level debug --reload
+    command: uvicorn app.asgi:application --host 0.0.0.0 --port 8000 --log-level debug --reload
+    volumes:
+      - .:/app
     ports:
       - 8000:8000
     env_file:
@@ -17,6 +19,8 @@ services:
     build:
       context: .
     command: celery -A app worker --loglevel=info
+    volumes:
+      - .:/app
     env_file:
       - ./env_vars_django.txt
     depends_on:

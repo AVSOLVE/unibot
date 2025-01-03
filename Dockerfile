@@ -1,6 +1,8 @@
 FROM python:3.12-slim
 
-WORKDIR /usr/src/app
+RUN mkdir /app
+WORKDIR /app
+COPY . /app
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
@@ -13,6 +15,7 @@ RUN playwright install chromium --with-deps
 COPY ./entrypoint.sh /usr/src/app/entrypoint.sh
 RUN chmod +x /usr/src/app/entrypoint.sh
 
-COPY . /usr/src/app/
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+CMD ["/entrypoint.sh"]

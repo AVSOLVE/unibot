@@ -1,6 +1,7 @@
 import json
 import os
 
+from asgiref.sync import async_to_sync
 from celery import shared_task
 from channels.layers import get_channel_layer
 
@@ -66,11 +67,11 @@ def executar_guias(self, payload_json):
             update_clients(codigo_beneficiarios)
             clear_file()
 
-        channel_layer.group_send(
+        async_to_sync(channel_layer.group_send)(
             "live_data",  # Name of the group
             {
                 "type": "live_data_message",
-                "message": "deu certo",
+                "message": clients,
             },
         )
         return {"success": "Task completed successfully."}
