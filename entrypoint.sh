@@ -1,8 +1,12 @@
 #!/bin/bash
 
-# Start Redis
-poetry shell &
-redis-server &
+# Ensure the virtual environment is activated
+export PATH="/app/.venv/bin:$PATH"
+source .venv/bin/activate
+
+# Start Django server in the background
+echo "Starting Django server..."
+python manage.py runserver 0.0.0.0:8000 &
 
 # Start Django with Daphne (or manage.py runserver)
 daphne -u /tmp/daphne.sock app.asgi:application &
