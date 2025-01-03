@@ -41,7 +41,7 @@ class FileChangeHandler(FileSystemEventHandler):
 
 
 def observe_file(file_path):
-    """Observe changes in the file."""
+    print("File Path:", file_path)
     event_handler = FileChangeHandler()
     observer = Observer()
     observer.schedule(event_handler, path=file_path, recursive=False)
