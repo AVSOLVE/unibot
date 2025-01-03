@@ -81,12 +81,12 @@ def clear_file(file_path="codigo_beneficiario_list.txt"):
 
 
 @shared_task(bind=True)
-def executar_guias(self):
+def executar_guias(self, **kwargs):
     try:
-        # Accessing the payload from kwargs directly
-        payload_json = self.kwargs.get("payload_json")
+        # Access payload_json from kwargs
+        payload_json = kwargs.get("payload_json")
 
-        if payload_json is None:
+        if not payload_json:
             raise ValueError("No payload_json provided.")
 
         payload = json.loads(payload_json)
