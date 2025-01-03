@@ -1,11 +1,45 @@
 import json
 import os
 
+from asgiref.sync import async_to_sync
 from celery import shared_task
+from channels.layers import get_channel_layer
 
 from core.main import login_and_navigate
 
 from .models import Client
+
+
+def send_channel_message(message):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "live_data",
+        {
+            "type": "live_data_message",
+            "message": message,
+        },
+    )
+
+
+def read_and_process_file(file_path="processed_clients.json"):
+    try:
+        if os.path.exists(file_path):
+            with open(file_path, "r") as file:
+                lines = file.readlines()
+
+            # Process each line
+            with open(file_path, "w") as file:
+                for line in lines:
+                    message = line.strip()
+                    if message:
+                        send_channel_message(message)
+                        print(f"Sent message: {message}")
+                    # We don't need to write anything back to the file, effectively removing the line
+
+        else:
+            print(f"{file_path} does not exist.")
+    except Exception as e:
+        print(f"Error processing file: {e}")
 
 
 def read_from_file(file_path="codigo_beneficiario_list.txt"):
@@ -62,6 +96,7 @@ def executar_guias(payload_json):
         if codigo_beneficiarios:
             update_clients(codigo_beneficiarios)
             clear_file()
+            read_and_process_file()
 
         return {"success": "Task completed successfully."}
 
