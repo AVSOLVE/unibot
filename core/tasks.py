@@ -13,7 +13,7 @@ from .models import Client
 def send_message_to_channel_group(message):
     # Send message asynchronously using sync_to_async
     channel_layer = get_channel_layer()
-    channel_layer.group_send(
+    async_to_sync(channel_layer.group_send)(
         "live_data",
         {
             "type": "live_data_message",
@@ -71,7 +71,7 @@ def executar_guias(self, payload_json):
 
         print("Starting process...")
         login_and_navigate(credentials, clients)
-        async_to_sync(send_message_to_channel_group)(clients)
+        send_message_to_channel_group(clients)
         # Read from file, update clients, and clear the file
         codigo_beneficiarios = read_from_file()
         if codigo_beneficiarios:
