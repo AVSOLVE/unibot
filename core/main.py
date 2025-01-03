@@ -294,7 +294,7 @@ def login_and_navigate(credentials, clients):
 
         page.set_default_timeout(retry_settings["defaultTimeout"])
         login_auth(credentials, page)
-        asyncio.run(process_and_execute(clients, page))
+        asyncio.ensure_future(process_and_execute(clients, page))
         # input("Press Enter to close the browser...")
         browser.close()
 
