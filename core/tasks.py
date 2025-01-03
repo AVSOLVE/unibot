@@ -1,7 +1,7 @@
+import asyncio
 import json
 import os
 
-from asgiref.sync import sync_to_async
 from celery import shared_task
 
 from core.main import login_and_navigate
@@ -57,7 +57,7 @@ def executar_guias(self, payload_json):
             return
 
         print("Starting process...")
-        sync_to_async(login_and_navigate(credentials, clients))
+        asyncio.run(login_and_navigate(credentials, clients))
 
         # Read from file, update clients, and clear the file
         codigo_beneficiarios = read_from_file()
