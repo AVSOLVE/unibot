@@ -8,3 +8,4 @@
 - sobre nos + contato
 - cron semanal
 - reduce img size
+- docker-compose up -d --build

@@ -1,15 +1,10 @@
 #!/bin/bash
 
-# Ensure the virtual environment is activated
-export PATH="/app/.venv/bin:$PATH"
-source .venv/bin/activate
+echo "Collect static files..."
+python manage.py collectstatic --noinput
 
-# Start Django server in the background
-echo "Starting Django server..."
-python manage.py runserver 0.0.0.0:8000 &
+echo "Apply database migrations..."
+python manage.py makemigrations
+python manage.py migrate
 
-# Start Django with Daphne (or manage.py runserver)
-daphne -u /tmp/daphne.sock app.asgi:application &
-
-# Start Celery worker
-celery -A app worker --loglevel=info
+exec "$@"
