@@ -1,4 +1,3 @@
-import asyncio
 import json
 import math
 import time
@@ -244,9 +243,8 @@ async def send_message_to_channel_group(message):
     )
 
 
-def process_and_execute(clients, page):
+async def process_and_execute(clients, page):
     try:
-        loop = asyncio.get_event_loop()
         for client in clients:
             try:
                 codigo_beneficiario = client["codigo_beneficiario"]
@@ -270,7 +268,7 @@ def process_and_execute(clients, page):
                 if result is None:
                     frame.get_by_role("button", name="Nova consulta").click()
 
-                loop.run_until_complete(send_message_to_channel_group(client))
+                await send_message_to_channel_group(client)
 
             except Exception as e:
                 print(f"Error processing client {codigo_beneficiario}: {e}")
@@ -280,7 +278,7 @@ def process_and_execute(clients, page):
         print(f"Unexpected error during processing: {e}")
 
 
-def login_and_navigate(credentials, clients):
+async def login_and_navigate(credentials, clients):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         context = browser.new_context()
@@ -299,7 +297,7 @@ def login_and_navigate(credentials, clients):
 
         page.set_default_timeout(retry_settings["defaultTimeout"])
         login_auth(credentials, page)
-        process_and_execute(clients, page)
+        await process_and_execute(clients, page)
         # input("Press Enter to close the browser...")
         browser.close()
 
