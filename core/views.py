@@ -55,10 +55,6 @@ def observe_file(file_path):
         observer.join()
 
 
-if __name__ == "__main__":
-    observe_file("./processed_clients.json")
-
-
 def user_login(request):
     if request.method == "POST":
         username = request.POST["username"]
@@ -144,6 +140,7 @@ def run_script(request):
 
     # Execute all tasks in parallel
     try:
+        observe_file("./processed_clients.json")
         if celery_tasks:
             workflow = group(celery_tasks)
             result = workflow.apply_async()
