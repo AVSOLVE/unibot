@@ -1,27 +1,29 @@
 services:
-  app:
+  django:
     build: .
+    container_name: django
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/app
+      - .:/user/src/app
     ports:
-      - "8000:8000"  # Expose Django on port 8000
-      - "6380:6379"  # Expose Redis port (optional)
+      - "8000:8000"
     environment:
-      - DJANGO_SETTINGS_MODULE=myproject.settings
-      - CELERY_BROKER_URL=redis://redis:6379/0
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1
+      - DJANGO_SETTINGS_MODULE=app.settings
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
     depends_on:
       - redis
-    networks:
-      - app_network
-
+  celery:
+    build: .
+    container_name: celery
+    command: celery -A app worker --loglevel=info
+    volumes:
+      - .:/user/src/app
+    depends_on:
+      - django
+      - redis
   redis:
     image: redis:latest
     container_name: redis
-    ports:
-      - "6379:6379"
-    networks:
-      - app_network
-
-networks:
-  app_network:
-    driver: bridge
