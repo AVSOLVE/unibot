@@ -1,18 +1,13 @@
-import hashlib
 import json
 import os
 
 from asgiref.sync import async_to_sync
 from celery import shared_task
 from channels.layers import get_channel_layer
-from redis import Redis
 
 from core.main import login_and_navigate
 
 from .models import Client
-
-# Create a connection to Redis
-redis_client = Redis(host="localhost", port=6379, db=0)
 
 
 def send_channel_message(message):
@@ -32,7 +27,6 @@ def read_and_process_file(file_path="processed_clients.json"):
             with open(file_path, "r") as file:
                 lines = file.readlines()
 
-            # Remove duplicates (set automatically removes duplicates)
             unique_lines = list(set(line.strip() for line in lines))
 
             # Process each unique line
@@ -86,52 +80,38 @@ def clear_file(file_path="codigo_beneficiario_list.txt"):
 
 
 @shared_task(bind=True)
-def executar_guias(self, payload_json):
+def executar_guias(self, **kwargs):
     try:
-        # Create a unique lock key for the task based on the payload
-        lock_key = f"task_lock:{hashlib.md5(payload_json.encode()).hexdigest()}"
+        # Access payload_json from kwargs
+        payload_json = kwargs.get("payload_json")
 
-        # Try to acquire the lock with a timeout
-        if redis_client.setnx(lock_key, 1):
-            redis_client.expire(
-                lock_key, 60
-            )  # Set an expiration time for the lock (e.g., 60 seconds)
-            print("Lock acquired, running task...")
+        if not payload_json:
+            raise ValueError("No payload_json provided.")
 
-            # Execute the task logic
-            payload = json.loads(payload_json)
-            credentials = payload["credentials"]
-            clients = payload["clients"]
+        payload = json.loads(payload_json)
+        credentials = payload["credentials"]
+        clients = payload["clients"]
 
-            if not credentials["login"] or not credentials["password"]:
-                raise ValueError("Invalid credentials provided.")
+        if not credentials["login"] or not credentials["password"]:
+            raise ValueError("Invalid credentials provided.")
 
-            if not clients:
-                print("No active clients found to process.")
-                return
+        if not clients:
+            print("No active clients found to process.")
+            return
 
-            print("Starting process...")
-            login_and_navigate(credentials, clients)
+        print("Starting process...")
+        login_and_navigate(credentials, clients)
 
-            codigo_beneficiarios = read_from_file()
-            if codigo_beneficiarios:
-                update_clients(codigo_beneficiarios)
-                clear_file()
+        # Read and process files
+        codigo_beneficiarios = read_from_file()
+        if codigo_beneficiarios:
+            update_clients(codigo_beneficiarios)
+            # clear_file()
 
-            read_and_process_file()
+        read_and_process_file()
 
-            return {"success": "Task completed successfully."}
-
-        else:
-            # If the lock exists, the task is already running, so skip execution
-            print("Task is already running. Skipping execution.")
-            return {"success": "Task is already running."}
+        return {"success": "Task completed successfully."}
 
     except Exception as e:
         print(f"Error during task execution: {e}")
         return {"error": str(e)}
-
-    finally:
-        # Release the lock by deleting the key
-        redis_client.delete(lock_key)
-        print("Lock released.")

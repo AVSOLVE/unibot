@@ -98,10 +98,11 @@ def run_script(request):
                 status=500,
             )
 
-    # Execute all tasks in parallel
     try:
         if celery_tasks:
+            print("celery tasks: ", celery_tasks)
             workflow = group(celery_tasks)
+            print("Dispatching Celery Tasks workflow: ", workflow)
             result = workflow.apply_async()
             print("Workflow Task ID:", result.id)
             print("Workflow Task ID:", result)
