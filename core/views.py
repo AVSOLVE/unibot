@@ -47,7 +47,6 @@ def home_view(request):
 
 @login_required
 def run_script(request):
-    # Fetch active clients and credentials
     client_list = list(
         Client.objects.filter(user=request.user, active=True).order_by("-created_at")
     )
@@ -100,9 +99,9 @@ def run_script(request):
             status=500,
         )
 
-    # return JsonResponse(
-    #     {"status": "success", "message": "Tasks dispatched successfully."}
-    # )
+    return JsonResponse(
+        {"status": "success", "message": "Tasks dispatched successfully."}
+    )
 
 
 @login_required

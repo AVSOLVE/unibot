@@ -4,17 +4,24 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8000:8000" # Django server
-      - "6379" # Redis port for debugging or other usage
+      - "8000:8000"  # Expose Django on port 8000
+      - "6380:6379"  # Expose Redis port (optional)
     environment:
-      - DJANGO_SETTINGS_MODULE=app.settings
-      - CELERY_BROKER_URL=redis://redis:6379/0 # Use 'redis' service name
+      - DJANGO_SETTINGS_MODULE=myproject.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
     depends_on:
-      - redis # Ensure Redis starts before the Django app
-    command: [ "/entrypoint.sh" ] # Point to entrypoint script
+      - redis
+    networks:
+      - app_network
 
   redis:
-    image: redis:6.2 # Redis image
+    image: redis:latest
     container_name: redis
     ports:
-      - "6379" # Expose Redis port for communication
+      - "6379:6379"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

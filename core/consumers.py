@@ -1,20 +1,26 @@
 import json
 
-from channels.generic.websocket import WebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
 
 
-class LiveDataConsumer(WebsocketConsumer):
-    def connect(self):
-        self.accept()
-        print("WebSocket connected!")
+class LiveDataConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        # Join the live_data group
+        self.group_name = "live_data"
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
 
-    def disconnect(self, close_code):
-        print("WebSocket disconnected.")
+    async def disconnect(self, close_code):
+        # Leave the group when the WebSocket closes
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
-    def receive(self, text_data):
-        data = json.loads(text_data)
-        print(f"Message received: {data['message']}")
-        # Echo the message back to the client
-        self.send(
-            text_data=json.dumps({"message": f"Server received: {data['message']}"})
-        )
+    # Receive message from WebSocket
+    async def receive(self, text_data):
+        # Handle incoming WebSocket messages if needed
+        pass
+
+    # Receive message from the group
+    async def live_data_message(self, event):
+        # Send message to WebSocket
+        message = event["message"]
+        await self.send(text_data=json.dumps({"message": message}))
