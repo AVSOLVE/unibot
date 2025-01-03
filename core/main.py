@@ -1,8 +1,10 @@
+import asyncio
 import json
 import math
 import time
 from datetime import datetime
 
+from asgiref.sync import sync_to_async
 from channels.layers import get_channel_layer
 from playwright.sync_api import sync_playwright
 
@@ -232,8 +234,9 @@ def get_extrato_guias(frame, codigo_beneficiario):
 
 
 def send_message_to_channel_group(message):
+    # Send message asynchronously using sync_to_async
     channel_layer = get_channel_layer()
-    channel_layer.group_send(
+    sync_to_async(channel_layer.group_send)(
         "live_data",
         {
             "type": "live_data_message",
@@ -244,6 +247,7 @@ def send_message_to_channel_group(message):
 
 def process_and_execute(clients, page):
     try:
+        loop = asyncio.get_event_loop()
         for client in clients:
             try:
                 codigo_beneficiario = client["codigo_beneficiario"]
@@ -267,7 +271,7 @@ def process_and_execute(clients, page):
                 if result is None:
                     frame.get_by_role("button", name="Nova consulta").click()
 
-                send_message_to_channel_group(client)
+                loop.run_until_complete(send_message_to_channel_group(client))
 
             except Exception as e:
                 print(f"Error processing client {codigo_beneficiario}: {e}")
