@@ -81,8 +81,14 @@ def clear_file(file_path="codigo_beneficiario_list.txt"):
 
 
 @shared_task(bind=True)
-def executar_guias(payload_json):
+def executar_guias(self):
     try:
+        # Accessing the payload from kwargs directly
+        payload_json = self.kwargs.get("payload_json")
+
+        if payload_json is None:
+            raise ValueError("No payload_json provided.")
+
         payload = json.loads(payload_json)
         credentials = payload["credentials"]
         clients = payload["clients"]
@@ -97,12 +103,14 @@ def executar_guias(payload_json):
         print("Starting process...")
         login_and_navigate(credentials, clients)
 
+        # Read and process files
         codigo_beneficiarios = read_from_file()
         if codigo_beneficiarios:
             update_clients(codigo_beneficiarios)
             clear_file()
 
         read_and_process_file()
+
         return {"success": "Task completed successfully."}
 
     except Exception as e:

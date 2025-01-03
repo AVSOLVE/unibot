@@ -85,8 +85,8 @@ def run_script(request):
             # Add the serialized chunk to the seen chunks for future comparisons
             seen_chunks.append(payload_json)
 
-            # Create a Celery task for this chunk
-            celery_tasks.append(executar_guias.s(payload_json))
+            # Create a Celery task for this chunk, passing the payload_json in kwargs
+            celery_tasks.append(executar_guias.s(payload_json=payload_json))
 
         except ValidationError as e:
             print("Payload Validation Error for chunk:", e.detail)
@@ -102,7 +102,6 @@ def run_script(request):
     try:
         if celery_tasks:
             workflow = group(celery_tasks)
-            print("WF", workflow)
             result = workflow.apply_async()
             print("Workflow Task ID:", result.id)
         else:
