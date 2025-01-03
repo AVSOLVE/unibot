@@ -127,9 +127,9 @@ def match_code(code):
 async def login_auth(credentials, page):
     await page.goto(urls["loginPage"], wait_until="domcontentloaded")
     frame = page.frame_locator("iframe >> nth=0").frame_locator("#principal")
-    frame.locator("#tipoUsuario").select_option("P")
-    frame.locator("#nmUsuario").fill(credentials["login"])
-    frame.locator("#dsSenha").fill(credentials["password"])
+    await frame.locator("#tipoUsuario").select_option("P")
+    await frame.locator("#nmUsuario").fill(credentials["login"])
+    await frame.locator("#dsSenha").fill(credentials["password"])
     await frame.get_by_role("button", name="Entrar").click()
     print("Login successful!")
     return await navigate_executar_guia(page)
@@ -300,13 +300,13 @@ async def login_and_navigate(credentials, clients):
             await browser.close()
 
 
-def login(page, credentials, menu_option):
+async def login(page, credentials, menu_option):
     page.goto(urls["loginPage"], wait_until="domcontentloaded")
 
     frame = page.frame_locator("iframe >> nth=0").frame_locator("#principal")
-    frame.locator("#tipoUsuario").select_option("P")
-    frame.locator("#nmUsuario").fill(credentials["login"])
-    frame.locator("#dsSenha").fill(credentials["password"])
+    await frame.locator("#tipoUsuario").select_option("P")
+    await frame.locator("#nmUsuario").fill(credentials["login"])
+    await frame.locator("#dsSenha").fill(credentials["password"])
     frame.get_by_role("button", name="Entrar").click()
     print("Login successful!")
     frame = (
