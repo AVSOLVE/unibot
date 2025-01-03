@@ -1,4 +1,3 @@
-import asyncio
 import json
 import math
 import time
@@ -232,8 +231,18 @@ def get_extrato_guias(frame, codigo_beneficiario):
             return None
 
 
-async def process_and_execute(clients, page):
+def send_message_to_channel_group(message):
     channel_layer = get_channel_layer()
+    channel_layer.group_send(
+        "live_data",
+        {
+            "type": "live_data_message",
+            "message": message,
+        },
+    )
+
+
+def process_and_execute(clients, page):
     try:
         for client in clients:
             try:
@@ -258,14 +267,7 @@ async def process_and_execute(clients, page):
                 if result is None:
                     frame.get_by_role("button", name="Nova consulta").click()
 
-                # Send data to the channel group
-                await channel_layer.group_send(
-                    "live_data",
-                    {
-                        "type": "live_data_message",
-                        "message": client,
-                    },
-                )
+                send_message_to_channel_group(client)
 
             except Exception as e:
                 print(f"Error processing client {codigo_beneficiario}: {e}")
@@ -294,7 +296,7 @@ def login_and_navigate(credentials, clients):
 
         page.set_default_timeout(retry_settings["defaultTimeout"])
         login_auth(credentials, page)
-        asyncio.ensure_future(process_and_execute(clients, page))
+        process_and_execute(clients, page)
         # input("Press Enter to close the browser...")
         browser.close()
 
