@@ -187,3 +187,13 @@ def client_update_active(request, client_id):
     client.save()
 
     return redirect("client_list")
+
+
+@login_required
+def client_update_all_active(request):
+    clients = Client.objects.filter(user=request.user, active=False)
+    updated_count = clients.update(active=True)
+
+    print(f"{updated_count} clients updated to active for user {request.user.username}")
+
+    return redirect("client_list")

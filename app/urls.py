@@ -18,6 +18,11 @@ urlpatterns = [
         views.client_update_active,
         name="client_update_active",
     ),
+    path(
+        "client_update_all_active/",
+        views.client_update_all_active,
+        name="client_update_all_active",
+    ),
     path("run_script", views.run_script, name="run_script"),
     path("run_script2", views.run_script2, name="run_script2"),
 ]
