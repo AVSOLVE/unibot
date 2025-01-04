@@ -249,7 +249,7 @@ def process_and_execute(clients, page):
 
                 # Determine the client's status
                 if result not in [None, False]:
-                    cliente_ativo = f"{codigo_beneficiario};{nome_beneficiario};true\n"
+                    cliente_ativo = f"{codigo_beneficiario};true\n"
                 else:
                     frame.get_by_role("button", name="Nova consulta").click()
                     cliente_ativo = f"{codigo_beneficiario};{nome_beneficiario};false\n"

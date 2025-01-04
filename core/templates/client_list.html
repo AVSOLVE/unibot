@@ -32,7 +32,7 @@
       class="w-full p-3 border border-gray-300 rounded shadow focus:outline-none focus:ring focus:ring-blue-200"
     />
   </div>
-
+  <ul id="message-list"></ul>
   <div class="overflow-x-auto rounded-lg shadow-lg">
     <table class="min-w-full bg-white">
       <thead class="bg-blue-600 text-white">
@@ -79,6 +79,12 @@
 
   </div>
 </main>
+<style>
+  ul {
+      list-style-type: none;
+      padding: 0;
+  }
+</style>
 <script>
   // Filter functionality for search
   const searchInput = document.getElementById('searchInput');
@@ -134,28 +140,53 @@
     }
   });
 
+</script>
+<script>
   const websocketProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   const url = `${websocketProtocol}://${window.location.host}/ws/live-data/`;
   const socket = new WebSocket(url);
 
-  socket.addEventListener('message', function (event) {
-    const data = JSON.parse(event.data);
-    console.log('Message received:', data.message);
-  });
+  socket.onmessage = function (event) {
+      const message = event.data; // Raw message string
+      console.log('Message received:', message);
 
-socket.onmessage = function(event) {
-    const data = JSON.parse(event.data);
-    console.log('Message received:', data.message);
-};
+      // Parse the message (split by `;`)
+      const [codigoBeneficiario, nome, statusString] = message.split(';');
+      const status = statusString.trim() === 'true'; // Convert `false` or `true` string to boolean
 
-socket.onopen = function() {
-    console.log('WebSocket connected!');
-    socket.send(JSON.stringify({ message: 'Hello from client!' }));
-};
+      // Create a new list element
+      const listElement = document.createElement('li');
+      listElement.textContent = `${codigoBeneficiario} - ${nome}`;
+      listElement.style.padding = '10px';
+      listElement.style.marginBottom = '5px';
+      listElement.style.color = 'white';
 
-socket.onclose = function() {
-    console.log('WebSocket disconnected.');
-};
+      // Style the list element based on status
+      if (status) {
+          listElement.style.backgroundColor = 'green';
+          listElement.textContent += ' ✔️'; // Add check icon for success
+      } else {
+          listElement.style.backgroundColor = 'red';
+          listElement.textContent += ' ❌'; // Add cross icon for failure
+      }
+
+      // Append the list element to a parent list in the HTML
+      const messageList = document.getElementById('message-list');
+      if (messageList) {
+          messageList.appendChild(listElement);
+      } else {
+          console.error('Parent list element (#message-list) not found in the DOM.');
+      }
+  };
+
+  socket.onopen = function () {
+      console.log('WebSocket connected!');
+      socket.send(JSON.stringify({ message: 'Hello from client!' }));
+  };
+
+  socket.onclose = function () {
+      console.log('WebSocket disconnected.');
+  };
 
 </script>
 {% endblock %}
