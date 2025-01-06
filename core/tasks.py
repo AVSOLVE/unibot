@@ -1,4 +1,6 @@
+import fcntl
 import json
+import logging
 import os
 
 from asgiref.sync import async_to_sync
@@ -8,6 +10,8 @@ from channels.layers import get_channel_layer
 from core.main import login_and_navigate
 
 from .models import Client
+
+logger = logging.getLogger(__name__)
 
 
 def send_channel_message(message):
@@ -22,68 +26,33 @@ def send_channel_message(message):
 
 
 def read_and_process_file(file_path="processed_clients.json"):
-    try:
-        if os.path.exists(file_path):
-            with open(file_path, "r") as file:
-                lines = file.readlines()
-                print(lines)
-
-            unique_lines = list(set(line.strip() for line in lines))
-
-            # Process each unique line
-            for line in unique_lines:
-                if line:
-                    send_channel_message(line)
-                    print(f"Sent message: {line}")
-
-            # After processing, clean the file by writing an empty file
-            with open(file_path, "w") as file:
-                file.truncate(0)  # Clear the file content
-
-            print(f"File {file_path} cleaned after processing.")
-        else:
-            print(f"{file_path} does not exist.")
-    except Exception as e:
-        print(f"Error processing file: {e}")
-
-
-def read_from_file(file_path="codigo_beneficiario_list.txt"):
-    try:
-        if os.path.exists(file_path):
-            with open(file_path, "r") as file:
-                return [line.strip() for line in file.readlines()]
-        else:
-            print(f"{file_path} does not exist.")
-            return []
-    except Exception as e:
-        print(f"Error reading from file: {e}")
-        return []
-
-
-def deactivate_clients():
-    file = "codigo_beneficiario_list.txt"
-    codigo_beneficiarios = read_from_file(file)
-    if not codigo_beneficiarios:
-        print("Sem clientes para desativar.")
+    if not os.path.exists(file_path):
+        logger.warning(f"{file_path} does not exist.")
         return
-    try:
-        for codigo_beneficiario in codigo_beneficiarios:
-            Client.objects.filter(codigo_beneficiario=codigo_beneficiario).update(
-                active=False
-            )
-        clear_file(file)
-        print("Clientes desativados com sucesso!")
-    except Exception as e:
-        print(f"Erro ao desativar cliente: {e}")
 
-
-def clear_file(file_path="codigo_beneficiario_list.txt"):
     try:
-        with open(file_path, "w") as file:
-            file.truncate()
-        print(f"Cleared file: {file_path}")
+        with open(file_path, "r+") as file:
+            fcntl.flock(file, fcntl.LOCK_EX)  # Lock the file
+            lines = file.readlines()
+            unique_lines = list(set(line.strip() for line in lines if line.strip()))
+
+            for line in unique_lines:
+                send_channel_message(line)
+                logger.info(f"Sent message: {line}")
+                codigo_beneficiario, nome_beneficiario, status = line.split(";")
+                if status == "false":
+                    Client.objects.filter(
+                        codigo_beneficiario=codigo_beneficiario
+                    ).update(active=True)
+
+            file.seek(0)
+            file.truncate()  # Clear the file content
+            logger.info(f"File {file_path} cleaned after processing.")
+
     except Exception as e:
-        print(f"Error clearing file: {e}")
+        logger.error(f"Error processing file: {e}")
+    finally:
+        fcntl.flock(file, fcntl.LOCK_UN)  # Unlock the file
 
 
 @shared_task(bind=True)
@@ -107,7 +76,6 @@ def executar_guias(self, **kwargs):
 
         print("Starting process...")
         login_and_navigate(credentials, clients)
-        deactivate_clients()
         read_and_process_file()
 
         return {"success": "Task completed successfully."}

@@ -193,7 +193,6 @@ def get_extrato_guias(frame, codigo_beneficiario):
         total_requisicao = frame.get_by_role("cell", name="Procedimento").count()
 
     if total_requisicao == 0:
-        save_to_file(codigo_beneficiario)
         return None
     else:
         try:
