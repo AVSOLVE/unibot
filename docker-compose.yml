@@ -3,7 +3,7 @@ services:
     container_name: django
     build:
       context: .
-    command: uvicorn app.asgi:application --host 0.0.0.0 --port 8000 --log-level debug --reload
+    command: uvicorn app.asgi:application --host 0.0.0.0 --port 8000 --reload
     volumes:
       - .:/app
     ports:
